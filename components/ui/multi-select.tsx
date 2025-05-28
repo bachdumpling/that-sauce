@@ -26,6 +26,7 @@ interface MultiSelectProps {
   className?: string;
   emptyMessage?: string;
   disabled?: boolean;
+  "data-testid"?: string;
 }
 
 export function MultiSelect({
@@ -36,6 +37,7 @@ export function MultiSelect({
   className,
   emptyMessage = "No options found.",
   disabled = false,
+  "data-testid": dataTestId,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -113,6 +115,7 @@ export function MultiSelect({
           )}
           onClick={() => setOpen(!open)}
           disabled={disabled}
+          data-testid={dataTestId}
         >
           <div className="w-full flex gap-1 flex-wrap">
             {renderSelectedItems()}

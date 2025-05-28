@@ -92,7 +92,7 @@ export default function MediaUploadStep({
   project,
 }: MediaUploadStepProps) {
   return (
-    <>
+    <div data-testid="media-upload-step">
       {/* Project Link Import Section - Only show if import option is enabled */}
       {showImportOption && (
         <Card>
@@ -111,15 +111,22 @@ export default function MediaUploadStep({
                     placeholder="Paste Behance/Dribbble URL here"
                     value={projectLink}
                     onChange={(e) => setProjectLink(e.target.value)}
+                    data-testid="project-url-input"
                   />
                   {importError && (
-                    <p className="text-sm text-red-500 mt-1">{importError}</p>
+                    <p
+                      className="text-sm text-red-500 mt-1"
+                      data-testid="error-message"
+                    >
+                      {importError}
+                    </p>
                   )}
                 </div>
                 <Button
                   onClick={handleImportMedia}
                   disabled={isImporting || !projectLink}
                   className="flex items-center gap-2"
+                  data-testid="import-media"
                 >
                   {isImporting ? (
                     <>
@@ -166,6 +173,7 @@ export default function MediaUploadStep({
               handleId={scrapingHandleId}
               accessToken={accessToken}
               onComplete={onScraperComplete}
+              data-testid="import-progress"
             />
           </CardContent>
         </Card>
@@ -191,6 +199,7 @@ export default function MediaUploadStep({
               ) as HTMLInputElement;
               if (fileInput) fileInput.click();
             }}
+            data-testid="file-drop-zone"
           >
             <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
             <p className="text-sm font-medium">
@@ -209,7 +218,10 @@ export default function MediaUploadStep({
               onChange={handleFileSelect}
             />
             {isLargeFile && (
-              <p className="text-xs text-red-500 mt-2">
+              <p
+                className="text-xs text-red-500 mt-2"
+                data-testid="large-file-warning"
+              >
                 Some files exceed the 5MB limit and were not added.
               </p>
             )}
@@ -226,10 +238,13 @@ export default function MediaUploadStep({
                   value={mediaLink}
                   onChange={(e) => setMediaLink(e.target.value)}
                   className="pl-9"
+                  data-testid="media-link-input"
                 />
                 <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
-              <Button onClick={handleAddMediaLink}>Add</Button>
+              <Button onClick={handleAddMediaLink} data-testid="add-media-link">
+                Add
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               We'll automatically detect if it's a YouTube or Vimeo link
@@ -251,6 +266,7 @@ export default function MediaUploadStep({
                         : ""
                     }`}
                     onClick={() => handleOpenMedia(media)}
+                    data-testid="media-item"
                   >
                     {media.type === "image" && (
                       <>
@@ -314,6 +330,7 @@ export default function MediaUploadStep({
                               e.stopPropagation();
                               handleSelectThumbnail(media);
                             }}
+                            data-testid="select-thumbnail"
                           >
                             <ImageIcon className="h-4 w-4 mr-1" />
                             {selectedThumbnail === media.url
@@ -329,6 +346,7 @@ export default function MediaUploadStep({
                             e.stopPropagation();
                             handleRemoveMedia(media.id);
                           }}
+                          data-testid="remove-media"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -340,7 +358,10 @@ export default function MediaUploadStep({
 
               {/* Project Thumbnail Section - if a thumbnail is selected */}
               {selectedThumbnail && (
-                <div className="mt-6 p-4 border border-dashed rounded-md bg-gray-50">
+                <div
+                  className="mt-6 p-4 border border-dashed rounded-md bg-gray-50"
+                  data-testid="selected-thumbnail"
+                >
                   <div className="flex items-center gap-2">
                     <ImageIcon className="h-5 w-5 text-primary" />
                     <h3 className="text-sm font-medium">
@@ -362,6 +383,7 @@ export default function MediaUploadStep({
               onClick={handleProceedToDetails}
               className="flex items-center gap-1"
               disabled={mediaItems.length === 0}
+              data-testid="proceed-to-details"
             >
               Continue
               <ArrowRight className="h-4 w-4 ml-1" />
@@ -369,6 +391,6 @@ export default function MediaUploadStep({
           </div>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

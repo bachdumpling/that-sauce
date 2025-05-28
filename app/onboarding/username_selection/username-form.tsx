@@ -90,11 +90,7 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
     e.preventDefault();
 
     if (!usernameData.isValid || !usernameData.isAvailable) {
-      toast({
-        title: "Invalid username",
-        description: "Please provide a valid and available username.",
-        variant: "destructive",
-      });
+      toast.error("Please provide a valid and available username.");
       return;
     }
 
@@ -103,10 +99,7 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
       const response = await setUsernameAction(usernameData.username);
 
       if (response.success) {
-        toast({
-          title: "Username saved",
-          description: "Your username has been set successfully.",
-        });
+        toast.success("Your username has been set successfully.");
 
         // Update the profile data in the context with the completed username and flag
         updateProfileData({
@@ -120,20 +113,13 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
           router.push("/onboarding/completed");
         }, 500);
       } else {
-        toast({
-          title: "Error",
-          description:
-            response.error || "Failed to save username. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(
+          response.error || "Failed to save username. Please try again."
+        );
       }
     } catch (error) {
       console.error("Error saving username:", error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

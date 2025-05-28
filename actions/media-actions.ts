@@ -34,10 +34,18 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function extractVimeoId(url: string): string | null {
+  // Handle various Vimeo URL formats including https://vimeo.com/1072008273/ecb6710763
   const regExp =
     /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?))/;
   const match = url.match(regExp);
-  return match ? match[1] : null;
+
+  if (match) {
+    return match[1];
+  }
+
+  // Fallback: extract the first number after vimeo.com/
+  const simpleMatch = url.match(/vimeo\.com\/(\d+)/);
+  return simpleMatch ? simpleMatch[1] : null;
 }
 
 function validateFileType(file: File): {
@@ -319,6 +327,13 @@ export async function batchUploadMediaAction(
   projectId: string,
   files: File[]
 ) {
+  console.log("batchUploadMediaAction called with:", {
+    username,
+    projectId,
+    filesCount: files.length,
+    fileNames: files.map((f) => f.name),
+  });
+
   try {
     const supabase = await createClient();
 
@@ -327,27 +342,47 @@ export async function batchUploadMediaAction(
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error(
+        "Authentication failed in batchUploadMediaAction:",
+        authError
+      );
       return { success: false, error: "Authentication required" };
     }
 
+    console.log("User authenticated:", user.id);
+
     // Verify project ownership
     const project = await verifyProjectOwnership(supabase, projectId, user.id);
+    console.log("Project ownership verified:", project.id);
 
     const results = [];
     const errors = [];
 
     for (const file of files) {
+      console.log(
+        `Processing file: ${file.name}, size: ${file.size}, type: ${file.type}`
+      );
+
       try {
         // Validate file
         const validation = validateFileType(file);
         if (!validation.isValid) {
+          console.error(
+            `File validation failed for ${file.name}:`,
+            validation.error
+          );
           errors.push({ file: file.name, error: validation.error });
           continue;
         }
 
+        console.log(`File ${file.name} validated as ${validation.type}`);
+
         // Check file size
         const maxSize = 50 * 1024 * 1024;
         if (file.size > maxSize) {
+          console.error(
+            `File ${file.name} exceeds size limit: ${file.size} > ${maxSize}`
+          );
           errors.push({
             file: file.name,
             error: "File size exceeds 50MB limit",
@@ -360,6 +395,8 @@ export async function batchUploadMediaAction(
         const fileExtension = file.name.split(".").pop();
         const fileName = `${user.id}/${projectId}/${validation.type}-${timestamp}.${fileExtension}`;
 
+        console.log(`Generated filename: ${fileName}`);
+
         // Upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("media")
@@ -369,17 +406,26 @@ export async function batchUploadMediaAction(
           });
 
         if (uploadError) {
+          console.error(`Storage upload failed for ${file.name}:`, uploadError);
           errors.push({ file: file.name, error: "Upload failed" });
           continue;
         }
+
+        console.log(`File ${file.name} uploaded successfully to storage`);
 
         // Get public URL
         const { data: urlData } = supabase.storage
           .from("media")
           .getPublicUrl(fileName);
 
+        console.log(
+          `Public URL generated for ${file.name}:`,
+          urlData.publicUrl
+        );
+
         // Save to database
         if (validation.type === "image") {
+          console.log(`Saving image ${file.name} to database`);
           const { data, error } = await supabase
             .from("images")
             .insert({
@@ -394,13 +440,27 @@ export async function batchUploadMediaAction(
             .single();
 
           if (error) {
+            console.error(
+              `Database save failed for image ${file.name}:`,
+              error
+            );
             await supabase.storage.from("media").remove([fileName]);
             errors.push({ file: file.name, error: "Database save failed" });
             continue;
           }
 
-          results.push({ ...data, type: "image" });
+          console.log(`Image ${file.name} saved to database successfully`);
+          results.push({
+            ...data,
+            type: "image",
+            metadata: {
+              original_filename: file.name,
+              file_size: file.size,
+              file_type: file.type,
+            },
+          });
         } else {
+          console.log(`Saving video ${file.name} to database`);
           const { data, error } = await supabase
             .from("videos")
             .insert({
@@ -415,14 +475,28 @@ export async function batchUploadMediaAction(
             .single();
 
           if (error) {
+            console.error(
+              `Database save failed for video ${file.name}:`,
+              error
+            );
             await supabase.storage.from("media").remove([fileName]);
             errors.push({ file: file.name, error: "Database save failed" });
             continue;
           }
 
-          results.push({ ...data, type: "video" });
+          console.log(`Video ${file.name} saved to database successfully`);
+          results.push({
+            ...data,
+            type: "video",
+            metadata: {
+              original_filename: file.name,
+              file_size: file.size,
+              file_type: file.type,
+            },
+          });
         }
       } catch (error: any) {
+        console.error(`Error processing file ${file.name}:`, error);
         errors.push({ file: file.name, error: error.message });
       }
     }
@@ -431,10 +505,10 @@ export async function batchUploadMediaAction(
     revalidatePath(`/${username}/work/${projectId}`, "page");
     revalidatePath(`/${username}/work`, "page");
 
-    return {
+    const response = {
       success: true,
       data: {
-        uploaded: results,
+        media: results,
         errors,
         total: files.length,
         successful: results.length,
@@ -442,6 +516,9 @@ export async function batchUploadMediaAction(
       },
       message: `Uploaded ${results.length}/${files.length} files successfully`,
     };
+
+    console.log("batchUploadMediaAction response:", response);
+    return response;
   } catch (error: any) {
     console.error("Error in batchUploadMediaAction:", error);
     return {
@@ -459,6 +536,12 @@ export async function uploadVideoLinkAction(
   projectId: string,
   videoData: z.infer<typeof VideoLinkSchema>
 ) {
+  console.log("uploadVideoLinkAction called with:", {
+    username,
+    projectId,
+    videoData,
+  });
+
   try {
     const supabase = await createClient();
 
@@ -467,14 +550,22 @@ export async function uploadVideoLinkAction(
       error: authError,
     } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error(
+        "Authentication failed in uploadVideoLinkAction:",
+        authError
+      );
       return { success: false, error: "Authentication required" };
     }
 
+    console.log("User authenticated:", user.id);
+
     // Validate input
     const validatedData = VideoLinkSchema.parse(videoData);
+    console.log("Video data validated:", validatedData);
 
     // Verify project ownership
     const project = await verifyProjectOwnership(supabase, projectId, user.id);
+    console.log("Project ownership verified:", project.id);
 
     // Extract video IDs
     let youtubeId = null;
@@ -486,48 +577,65 @@ export async function uploadVideoLinkAction(
     ) {
       youtubeId = extractYouTubeId(validatedData.video_url);
       if (!youtubeId) {
+        console.error("Invalid YouTube URL:", validatedData.video_url);
         return { success: false, error: "Invalid YouTube URL" };
       }
+      console.log("Extracted YouTube ID:", youtubeId);
     } else if (validatedData.video_url.includes("vimeo.com")) {
       vimeoId = extractVimeoId(validatedData.video_url);
       if (!vimeoId) {
+        console.error("Invalid Vimeo URL:", validatedData.video_url);
         return { success: false, error: "Invalid Vimeo URL" };
       }
+      console.log("Extracted Vimeo ID:", vimeoId);
     } else {
+      console.error(
+        "URL is not from YouTube or Vimeo:",
+        validatedData.video_url
+      );
       return { success: false, error: "URL must be from YouTube or Vimeo" };
     }
 
     // Create video record
-    const { data: videoRecord, error } = await supabase
+    const videoRecord = {
+      project_id: projectId,
+      creator_id: project.creator_id,
+      url: validatedData.video_url,
+      title:
+        validatedData.title || `Video from ${youtubeId ? "YouTube" : "Vimeo"}`,
+      description: validatedData.description || "",
+      categories: [],
+      youtube_id: youtubeId,
+      vimeo_id: vimeoId,
+    };
+
+    console.log("Creating video record:", videoRecord);
+
+    const { data: videoRecord_result, error } = await supabase
       .from("videos")
-      .insert({
-        project_id: projectId,
-        creator_id: project.creator_id,
-        url: validatedData.video_url,
-        title:
-          validatedData.title ||
-          `Video from ${youtubeId ? "YouTube" : "Vimeo"}`,
-        description: validatedData.description || "",
-        categories: [],
-        youtube_id: youtubeId,
-        vimeo_id: vimeoId,
-      })
+      .insert(videoRecord)
       .select()
       .single();
 
     if (error) {
+      console.error("Failed to save video link to database:", error);
       return { success: false, error: "Failed to save video link" };
     }
+
+    console.log("Video link saved successfully:", videoRecord_result);
 
     // Revalidate paths
     revalidatePath(`/${username}/work/${projectId}`, "page");
     revalidatePath(`/${username}/work`, "page");
 
-    return {
+    const response = {
       success: true,
-      data: { ...videoRecord, type: "video" },
+      data: { ...videoRecord_result, type: "video" },
       message: "Video link added successfully",
     };
+
+    console.log("uploadVideoLinkAction response:", response);
+    return response;
   } catch (error: any) {
     console.error("Error in uploadVideoLinkAction:", error);
     return {

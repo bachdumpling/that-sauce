@@ -136,7 +136,7 @@ export function UsernameInput({
       try {
         // Use the existing action to check username availability
         const response = await checkUsernameAvailabilityAction(usernameToCheck);
-        setIsAvailable(response.success ? response.data.available : false);
+        setIsAvailable(response.success && response.available ? true : false);
         if (!response.success) {
           setError(response.error || "Failed to check username availability");
         }

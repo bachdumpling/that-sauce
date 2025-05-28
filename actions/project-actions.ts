@@ -2,14 +2,6 @@
 
 import { Project, Creator } from "@/types";
 import { revalidatePath } from "next/cache";
-import {
-  getProjectByIdServer,
-  createProjectServer,
-  updateProjectServer,
-  deleteProjectServer,
-  getProjectMediaServer,
-  getProjectDirectFromDB,
-} from "@/lib/api/server/projects";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
@@ -38,7 +30,7 @@ export async function getProjectByIdAction(projectId: string) {
           resolutions,
           order,
           created_at,
-          updated_at
+          updated_at        
         ),
         videos (
           id,
@@ -180,17 +172,94 @@ export async function getProjectMediaAction(
   limit = 50
 ) {
   try {
-    const response = await getProjectMediaServer(projectId, page, limit);
+    const supabase = await createClient();
 
-    if (!response.success) {
-      console.error("Failed to fetch project media:", response.error);
+    // Check if project exists
+    const { data: project, error: projectError } = await supabase
+      .from("projects")
+      .select("id, title")
+      .eq("id", projectId)
+      .single();
+
+    if (projectError) {
+      console.error("Failed to fetch project:", projectError);
       return {
         success: false,
-        error: response.error || "Failed to fetch media",
+        error: "Project not found",
       };
     }
 
-    return { success: true, data: response.data };
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    // Fetch images with pagination
+    const { data: images, error: imagesError } = await supabase
+      .from("images")
+      .select(
+        `
+        id,
+        url,
+        alt_text,
+        resolutions,
+        order,
+        created_at,
+        updated_at
+      `
+      )
+      .eq("project_id", projectId)
+      .order("order", { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (imagesError) {
+      console.error("Failed to fetch images:", imagesError);
+    }
+
+    // Fetch videos with pagination
+    const { data: videos, error: videosError } = await supabase
+      .from("videos")
+      .select(
+        `
+        id,
+        url,
+        title,
+        description,
+        youtube_id,
+        vimeo_id,
+        created_at,
+        updated_at
+      `
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (videosError) {
+      console.error("Failed to fetch videos:", videosError);
+    }
+
+    // Get total counts
+    const { count: totalImages } = await supabase
+      .from("images")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId);
+
+    const { count: totalVideos } = await supabase
+      .from("videos")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId);
+
+    return {
+      success: true,
+      data: {
+        project_id: projectId,
+        project_title: project.title,
+        images: images || [],
+        videos: videos || [],
+        total: (totalImages || 0) + (totalVideos || 0),
+        images_count: totalImages || 0,
+        videos_count: totalVideos || 0,
+      },
+    };
   } catch (error: any) {
     console.error("Error in getProjectMediaAction:", error);
     return {
@@ -221,12 +290,17 @@ export async function createProjectAction(
     // Get creator info
     const { data: creator } = await supabase
       .from("creators")
-      .select("id, portfolio_id")
+      .select("id")
       .eq("profile_id", user.id)
       .single();
 
     if (!creator) {
-      return { success: false, error: "Creator profile not found" };
+      return {
+        success: false,
+        error:
+          "Creator profile not found. Please complete your profile setup first by visiting the onboarding page.",
+        redirectTo: "/onboarding",
+      };
     }
 
     // Validate required fields
@@ -234,35 +308,58 @@ export async function createProjectAction(
       return { success: false, error: "Project title is required" };
     }
 
-    // Add creator_id and portfolio_id to project data
-    const completeProjectData = {
-      title: projectData.title,
-      description: projectData.description,
-      short_description: projectData.short_description,
-      roles: projectData.roles,
-      client_ids: projectData.client_ids,
-      year: projectData.year || undefined,
-    };
+    // Get the creator's portfolio_id
+    const { data: portfolio } = await supabase
+      .from("portfolios")
+      .select("id")
+      .eq("creator_id", creator.id)
+      .single();
 
-    const response = await createProjectServer(completeProjectData);
-
-    if (response.success) {
-      // Revalidate creator pages to show the new project
-      revalidatePath(`/${username}`, "layout");
-      revalidatePath(`/${username}/work`, "page");
-
-      return {
-        success: true,
-        message: "Project created successfully",
-        data: response.data,
-      };
-    } else {
+    if (!portfolio) {
       return {
         success: false,
-        message: response.error || "Failed to create project",
-        error: response.error,
+        error: "Portfolio not found. Please complete your profile setup.",
+        redirectTo: "/onboarding",
       };
     }
+
+    // Create the project directly in Supabase
+    const { data: newProject, error: createError } = await supabase
+      .from("projects")
+      .insert({
+        creator_id: creator.id,
+        portfolio_id: portfolio.id,
+        title: projectData.title,
+        description: projectData.description || "",
+        short_description: projectData.short_description || "",
+        roles: projectData.roles || [],
+        client_ids: projectData.client_ids || [],
+        year: projectData.year,
+        featured: false,
+        order: 0,
+        ai_analysis: "",
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error("Error creating project:", createError);
+      return {
+        success: false,
+        error: "Failed to create project",
+        message: createError.message,
+      };
+    }
+
+    // Revalidate creator pages to show the new project
+    revalidatePath(`/${username}`, "layout");
+    revalidatePath(`/${username}/work`, "page");
+
+    return {
+      success: true,
+      message: "Project created successfully",
+      data: newProject,
+    };
   } catch (error: any) {
     console.error("Error in createProjectAction:", error);
     return {
@@ -310,34 +407,57 @@ export async function updateProjectAction(
       return { success: false, error: "Project not found or access denied" };
     }
 
-    const response = await updateProjectServer(projectId, projectData);
+    // Prepare update data - only include defined fields
+    const updateData: any = {};
+    if (projectData.title !== undefined) updateData.title = projectData.title;
+    if (projectData.description !== undefined)
+      updateData.description = projectData.description;
+    if (projectData.short_description !== undefined)
+      updateData.short_description = projectData.short_description;
+    if (projectData.roles !== undefined) updateData.roles = projectData.roles;
+    if (projectData.client_ids !== undefined)
+      updateData.client_ids = projectData.client_ids;
+    if (projectData.year !== undefined) updateData.year = projectData.year;
+    if (projectData.featured !== undefined)
+      updateData.featured = projectData.featured;
 
-    console.log("projectData in updateProjectAction", projectData);
-    console.log("project update response in updateProjectAction", response);
+    // Check if there's anything to update
+    if (Object.keys(updateData).length === 0) {
+      return { success: false, error: "No fields to update" };
+    }
 
-    if (response.success) {
-      // Revalidate related paths
-      revalidatePath(`/${username}`, "layout");
-      revalidatePath(`/${username}/work`, "page");
-      revalidatePath(`/${username}/work/${projectId}`, "page");
+    // Update the project
+    const { data: updatedProject, error: updateError } = await supabase
+      .from("projects")
+      .update(updateData)
+      .eq("id", projectId)
+      .select()
+      .single();
 
-      // Also revalidate by project title if available
-      if (projectData.title) {
-        revalidatePath(`/${username}/work/${projectData.title}`, "page");
-      }
-
-      return {
-        success: true,
-        message: "Project updated successfully",
-        data: response.data,
-      };
-    } else {
+    if (updateError) {
+      console.error("Failed to update project:", updateError);
       return {
         success: false,
-        message: response.error || "Failed to update project",
-        error: response.error,
+        message: "Failed to update project",
+        error: updateError.message,
       };
     }
+
+    // Revalidate related paths
+    revalidatePath(`/${username}`, "layout");
+    revalidatePath(`/${username}/work`, "page");
+    revalidatePath(`/${username}/work/${projectId}`, "page");
+
+    // Also revalidate by project title if available
+    if (projectData.title) {
+      revalidatePath(`/${username}/work/${projectData.title}`, "page");
+    }
+
+    return {
+      success: true,
+      message: "Project updated successfully",
+      data: updatedProject,
+    };
   } catch (error: any) {
     console.error("Error in updateProjectAction:", error);
     return {
@@ -357,13 +477,23 @@ export async function deleteProjectAction(
   cascade = true
 ) {
   try {
+    console.log("deleteProjectAction called with:", {
+      username,
+      projectId,
+      cascade,
+    });
+
     const supabase = await createClient();
 
     // Get current user
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    console.log("Current user:", user?.id);
+
     if (!user) {
+      console.log("No user found, returning auth error");
       return { success: false, error: "Authentication required" };
     }
 
@@ -382,28 +512,131 @@ export async function deleteProjectAction(
       .eq("id", projectId)
       .single();
 
+    console.log("Project ownership check:", {
+      project,
+      userProfileId: user.id,
+    });
+
     if (!project || (project.creators as any).profile_id !== user.id) {
+      console.log("Ownership verification failed");
       return { success: false, error: "Project not found or access denied" };
     }
 
-    const response = await deleteProjectServer(projectId);
+    console.log("Starting cascade delete process...");
 
-    if (response.success) {
-      // Revalidate related paths
-      revalidatePath(`/${username}`, "layout");
-      revalidatePath(`/${username}/work`, "page");
+    // If cascade delete, remove all associated media first
+    if (cascade) {
+      // Get all media files to delete from storage
+      const { data: images } = await supabase
+        .from("images")
+        .select("url")
+        .eq("project_id", projectId);
 
-      return {
-        success: true,
-        message: "Project deleted successfully",
-      };
-    } else {
+      const { data: videos } = await supabase
+        .from("videos")
+        .select("url")
+        .eq("project_id", projectId);
+
+      console.log("Found media to delete:", {
+        images: images?.length || 0,
+        videos: videos?.length || 0,
+      });
+
+      // Extract file paths and delete from storage
+      const filePaths: string[] = [];
+
+      if (images) {
+        images.forEach((image: any) => {
+          try {
+            const url = new URL(image.url);
+            const pathParts = url.pathname.split("/");
+            const filePath = pathParts
+              .slice(pathParts.indexOf("media") + 1)
+              .join("/");
+            if (filePath) filePaths.push(filePath);
+          } catch (error) {
+            console.error("Error parsing image URL:", error);
+          }
+        });
+      }
+
+      if (videos) {
+        videos.forEach((video: any) => {
+          try {
+            const url = new URL(video.url);
+            const pathParts = url.pathname.split("/");
+            const filePath = pathParts
+              .slice(pathParts.indexOf("media") + 1)
+              .join("/");
+            if (filePath) filePaths.push(filePath);
+          } catch (error) {
+            console.error("Error parsing video URL:", error);
+          }
+        });
+      }
+
+      console.log("File paths to delete from storage:", filePaths);
+
+      // Delete files from storage
+      if (filePaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from("media")
+          .remove(filePaths);
+
+        if (storageError) {
+          console.error("Error deleting files from storage:", storageError);
+          // Continue with project deletion even if storage cleanup fails
+        } else {
+          console.log("Successfully deleted files from storage");
+        }
+      }
+
+      // Delete media records (this should cascade due to foreign key constraints)
+      console.log("Deleting media records...");
+      const imageDeleteResult = await supabase
+        .from("images")
+        .delete()
+        .eq("project_id", projectId);
+      const videoDeleteResult = await supabase
+        .from("videos")
+        .delete()
+        .eq("project_id", projectId);
+
+      console.log("Media deletion results:", {
+        images: imageDeleteResult.error || "success",
+        videos: videoDeleteResult.error || "success",
+      });
+    }
+
+    console.log("Deleting project record...");
+
+    // Delete the project
+    const { error: deleteError } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+
+    if (deleteError) {
+      console.error("Failed to delete project:", deleteError);
       return {
         success: false,
-        message: response.error || "Failed to delete project",
-        error: response.error,
+        message: "Failed to delete project",
+        error: deleteError.message,
       };
     }
+
+    console.log("Project deleted successfully, revalidating paths...");
+
+    // Revalidate related paths
+    revalidatePath(`/${username}`, "layout");
+    revalidatePath(`/${username}/work`, "page");
+
+    console.log("Delete operation completed successfully");
+
+    return {
+      success: true,
+      message: "Project deleted successfully",
+    };
   } catch (error: any) {
     console.error("Error in deleteProjectAction:", error);
     return {
@@ -570,14 +803,20 @@ export async function checkProjectExistsAction(
   projectId: string
 ): Promise<Project> {
   try {
-    const response = await getProjectByIdServer(projectId);
+    const supabase = await createClient();
 
-    if (!response.success || !response.data) {
-      console.error("Project not found:", response.error);
+    const { data: project, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .single();
+
+    if (error || !project) {
+      console.error("Project not found:", error);
       notFound();
     }
 
-    return response.data;
+    return project;
   } catch (error) {
     console.error("Error checking if project exists:", error);
     notFound();

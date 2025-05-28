@@ -1,4 +1,8 @@
-import { signInWithGoogleAction, signInWithOTPAction } from "@/app/actions";
+import {
+  signInWithGoogleAction,
+  signInWithOTPAction,
+  signUpAction,
+} from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,11 +33,40 @@ export default async function Signup(props: {
           </Link>
         </p>
 
-        <Tabs defaultValue="google" className="mt-6">
-          <TabsList className="grid grid-cols-2 w-full">
+        <Tabs defaultValue="email" className="mt-6">
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="email">Email</TabsTrigger>
             <TabsTrigger value="google">Google</TabsTrigger>
-            <TabsTrigger value="otp">Email OTP</TabsTrigger>
+            <TabsTrigger value="otp">Magic Link</TabsTrigger>
           </TabsList>
+
+          {/* Email and password sign up */}
+          <TabsContent value="email">
+            <form className="flex flex-col mt-4">
+              <div className="flex flex-col gap-2 [&>input]:mb-3">
+                <Label htmlFor="email">Email</Label>
+                <Input name="email" placeholder="you@example.com" required />
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  name="password"
+                  type="password"
+                  placeholder="Create a password (min 6 characters)"
+                  required
+                  minLength={6}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  formAction={signUpAction}
+                >
+                  Sign up
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  You'll receive a confirmation email to verify your account
+                </p>
+              </div>
+            </form>
+          </TabsContent>
 
           {/* Google sign up */}
           <TabsContent value="google">
@@ -69,9 +102,13 @@ export default async function Signup(props: {
             </form>
           </TabsContent>
         </Tabs>
-
-        <FormMessage message={searchParams} className="mt-4" />
       </div>
+
+      {("error" in searchParams || "success" in searchParams) && (
+        <div className="mt-4">
+          <FormMessage message={searchParams} />
+        </div>
+      )}
     </>
   );
 }

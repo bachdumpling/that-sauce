@@ -22,15 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { VimeoEmbed, YouTubeEmbed } from "@/components/ui/vimeo-embed";
 import { MultiSelect, Option } from "@/components/ui/multi-select";
-import {
-  Trash2,
-  Upload,
-  Loader2,
-  Link,
-  ExternalLink,
-  ArrowRight,
-  ImageIcon,
-} from "lucide-react";
+import { ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 // Import server actions instead of client API functions
@@ -38,16 +30,19 @@ import {
   createProjectAction,
   updateProjectAction,
   getProjectByIdAction,
+  deleteProjectAction,
 } from "@/actions/project-actions";
 import { getOrganizationsAction } from "@/actions/organization-actions";
 import {
   batchUploadMediaAction,
   uploadVideoLinkAction,
-  importUrlMediaAction,
 } from "@/actions/media-actions";
-import { extractMediaFromUrlAction } from "@/actions/scraper-actions";
+import {
+  extractMediaFromUrlAction,
+  importMediaFromUrlAction,
+} from "@/actions/scraper-actions";
 import { CREATOR_ROLES } from "@/lib/constants/creator-options";
-import { Organization } from "@/types/project";
+import { Organization, Project } from "@/types/project";
 import MediaUploadStep from "./new-project-steps/media-upload-step";
 import ProjectDetailsStep from "./new-project-steps/project-details-step";
 import { ScraperProgress } from "@/components/scraper-progress";
@@ -116,7 +111,7 @@ export default function NewProjectForm() {
         const response = await getOrganizationsAction();
 
         if (response.success && response.data) {
-          setOrganizations(response.data);
+          setOrganizations(response.data.organizations);
         } else {
           console.error("Failed to load organizations:", response.message);
           toast.error("Failed to load client list");
@@ -187,11 +182,11 @@ export default function NewProjectForm() {
       setFiles((prevFiles) => [...prevFiles, ...validFiles]);
 
       // Create media items from files
-      const newMediaItems = validFiles.map((file) => {
+      const newMediaItems: MediaItem[] = validFiles.map((file) => {
         const isVideo = file.type.startsWith("video/");
         return {
           id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          type: isVideo ? "video" : "image",
+          type: (isVideo ? "video" : "image") as "image" | "video",
           url: URL.createObjectURL(file),
           file,
         };
@@ -253,11 +248,11 @@ export default function NewProjectForm() {
         setFiles((prevFiles) => [...prevFiles, ...validFiles]);
 
         // Create media items from files
-        const newMediaItems = validFiles.map((file) => {
+        const newMediaItems: MediaItem[] = validFiles.map((file) => {
           const isVideo = file.type.startsWith("video/");
           return {
             id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            type: isVideo ? "video" : "image",
+            type: (isVideo ? "video" : "image") as "image" | "video",
             url: URL.createObjectURL(file),
             file,
           };
@@ -307,9 +302,20 @@ export default function NewProjectForm() {
         vimeo_id: vimeoMatch[1],
       };
     } else {
-      // Invalid video URL
-      toast.error("Please enter a valid YouTube or Vimeo URL");
-      return;
+      // Try fallback Vimeo pattern for URLs like https://vimeo.com/1072008273/ecb6710763
+      const vimeoFallbackMatch = mediaLink.match(/vimeo\.com\/(\d+)/);
+      if (vimeoFallbackMatch && vimeoFallbackMatch[1]) {
+        newMedia = {
+          id: `vimeo-${Date.now()}`,
+          type: "vimeo",
+          url: mediaLink,
+          vimeo_id: vimeoFallbackMatch[1],
+        };
+      } else {
+        // Invalid video URL
+        toast.error("Please enter a valid YouTube or Vimeo URL");
+        return;
+      }
     }
 
     setMediaItems((prev) => [...prev, newMedia!]);
@@ -349,15 +355,22 @@ export default function NewProjectForm() {
       toast.info("Scraping media from URL. This may take a few seconds...");
 
       // Extract media from external URL
-      const response = await extractMediaFromUrlAction(projectLink);
+      const response = await extractMediaFromUrlAction({
+        url: projectLink,
+        autoImport: false,
+        extractImages: true,
+        extractVideos: true,
+        maxImages: 50,
+        maxVideos: 10,
+      });
 
       if (!response.success || !response.data) {
         throw new Error(response.message || "Failed to import media from URL");
       }
 
-      // We now have a handle_id instead of direct media data
-      if (response.data.handle_id) {
-        setScrapingHandleId(response.data.handle_id);
+      // We now have a handleId instead of direct media data
+      if (response.data.handleId) {
+        setScrapingHandleId(response.data.handleId);
         // Store the access token if available
         if (response.data.publicAccessToken) {
           setAccessToken(response.data.publicAccessToken);
@@ -415,7 +428,7 @@ export default function NewProjectForm() {
       }
 
       // Convert scraped media to our MediaItem format
-      const importedMedia = scrapeData.media.map((item) => {
+      const importedMedia = scrapeData.media.map((item: any) => {
         const id = `imported-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
         if (item.type === "video") {
@@ -453,16 +466,20 @@ export default function NewProjectForm() {
       setMediaItems((prev) => [...prev, ...importedMedia]);
 
       const mediaTypeDistribution = {
-        images: importedMedia.filter((m) => m.type === "image").length,
-        videos: importedMedia.filter((m) => m.type === "video").length,
-        youtube: importedMedia.filter((m) => m.type === "youtube").length,
-        vimeo: importedMedia.filter((m) => m.type === "vimeo").length,
+        images: importedMedia.filter((m: MediaItem) => m.type === "image")
+          .length,
+        videos: importedMedia.filter((m: MediaItem) => m.type === "video")
+          .length,
+        youtube: importedMedia.filter((m: MediaItem) => m.type === "youtube")
+          .length,
+        vimeo: importedMedia.filter((m: MediaItem) => m.type === "vimeo")
+          .length,
       };
 
       toast.success(
         `Imported ${importedMedia.length} media items: ` +
           Object.entries(mediaTypeDistribution)
-            .filter(([_, count]) => count > 0)
+            .filter(([_, count]: [string, number]) => count > 0)
             .map(([type, count]) => `${count} ${type}`)
             .join(", ")
       );
@@ -537,12 +554,26 @@ export default function NewProjectForm() {
       return;
     }
 
+    // Validate that there's at least one media item
+    if (mediaItems.length === 0) {
+      toast.error(
+        "Please add at least one media item before creating the project"
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setCurrentStep("Creating project...");
 
     try {
       // Get current user's username
       const username = window.location.pathname.split("/")[1] || "";
+      console.log("Extracted username from URL:", username);
+      console.log("Current pathname:", window.location.pathname);
+
+      if (!username) {
+        throw new Error("Could not determine username from URL");
+      }
 
       // Variable to store the final URL determined after uploads/imports
       let finalThumbnailUrl: string | null = null;
@@ -563,15 +594,23 @@ export default function NewProjectForm() {
         throw new Error(projectResponse.message || "Failed to create project");
       }
 
-      const projectId = projectResponse.data.project.id;
+      const projectId = projectResponse.data.id;
 
       if (!projectId) {
         console.error("No project ID returned from API");
         throw new Error("No project ID returned from API");
       }
 
+      // Track upload success for validation
+      let hasUploadErrors = false;
+      let uploadErrorMessages: string[] = [];
+
       // Separate local files from remote URL items
       const fileUploads = [...files]; // These are true File objects
+      console.log(
+        "Files to upload:",
+        fileUploads.map((f) => ({ name: f.name, size: f.size, type: f.type }))
+      );
 
       // Add scraped media URLs (excluding YouTube/Vimeo which are handled separately)
       const scrapedMediaItems = mediaItems
@@ -589,6 +628,8 @@ export default function NewProjectForm() {
           order: item.order,
         }));
 
+      console.log("Scraped media items to import:", scrapedMediaItems);
+
       // Handle local file uploads first if there are any
       let uploadResponse: any = null; // Store response for later use
       if (fileUploads.length > 0) {
@@ -603,10 +644,22 @@ export default function NewProjectForm() {
 
           if (!uploadResponse.success) {
             console.error("File upload failed:", uploadResponse);
-            toast.error(
-              `Project created but file upload failed: ${uploadResponse.message}`
+            hasUploadErrors = true;
+            uploadErrorMessages.push(
+              `File upload failed: ${uploadResponse.message || uploadResponse.error}`
             );
           } else if (uploadResponse.data) {
+            // Check for partial failures
+            if (
+              uploadResponse.data.errors &&
+              uploadResponse.data.errors.length > 0
+            ) {
+              hasUploadErrors = true;
+              uploadErrorMessages.push(
+                `${uploadResponse.data.errors.length} files failed to upload`
+              );
+            }
+
             // Process successful upload, check if selected thumbnail was uploaded
             const selectedMediaItem = mediaItems.find(
               (item) => item.id === selectedThumbnail
@@ -622,7 +675,7 @@ export default function NewProjectForm() {
               // Strategy 1: Match by filename
               const fileName = selectedMediaItem.file.name;
 
-              // Ensure images array exists before trying to find
+              // Ensure media array exists before trying to find
               if (Array.isArray(uploadedMediaArray)) {
                 // Access metadata for original_filename
                 matchingImage = uploadedMediaArray.find(
@@ -633,7 +686,7 @@ export default function NewProjectForm() {
                 console.warn(
                   "uploadResponse.data.media is not an array or is missing."
                 );
-                // Handle case where images array is missing - cannot find match
+                // Handle case where media array is missing - cannot find match
               }
 
               // Strategy 2: Try to match by file size if strategy 1 fails
@@ -654,19 +707,11 @@ export default function NewProjectForm() {
                 );
               }
             }
-
-            if (
-              uploadResponse.data.errors &&
-              uploadResponse.data.errors.length > 0
-            ) {
-              toast.warning(
-                `Some files failed to upload (${uploadResponse.data.errors.length} errors)`
-              );
-            }
           }
         } catch (uploadError: any) {
           console.error("Error during file upload:", uploadError);
-          toast.error(
+          hasUploadErrors = true;
+          uploadErrorMessages.push(
             `File upload error: ${uploadError.message || "Unknown error"}`
           );
         }
@@ -678,54 +723,74 @@ export default function NewProjectForm() {
         setCurrentStep(`Uploading ${scrapedMediaItems.length} media URLs...`);
 
         try {
-          importResponse = await importUrlMediaAction(
-            username,
-            projectId,
-            scrapedMediaItems
-          );
+          const importResults = [];
+          const importErrors = [];
 
-          if (!importResponse.success) {
-            console.error("Media URL import failed:", importResponse);
-            toast.error(`Media URL import failed: ${importResponse.message}`);
-          } else {
-            // Check if we need to set the thumbnail from imported images
-            if (
-              selectedThumbnail &&
-              !finalThumbnailUrl &&
-              // Check the correct media array
-              Array.isArray(importResponse.data?.media) // Check if media array exists
-            ) {
-              // Find the selected thumbnail in imported images (using frontend ID)
-              const selectedMediaItem = mediaItems.find(
-                (item) => item.id === selectedThumbnail
-              );
+          for (const mediaItem of scrapedMediaItems) {
+            try {
+              const result = await importMediaFromUrlAction({
+                projectId: projectId,
+                url: mediaItem.url,
+                mediaType: mediaItem.type,
+                title: mediaItem.alt_text,
+              });
 
-              if (selectedMediaItem && selectedMediaItem.url) {
-                // Search in the correct media array (importResponse.data.media)
-                const matchingImage = importResponse.data.media.find(
-                  (img: any) => img.url === selectedMediaItem.url
-                );
-
-                if (matchingImage && matchingImage.url) {
-                  finalThumbnailUrl = matchingImage.url; // Store the URL
-                }
+              if (result.success) {
+                importResults.push(result.data);
+              } else {
+                importErrors.push(result.error);
               }
+            } catch (error: any) {
+              importErrors.push(error.message);
             }
+          }
 
-            toast.success(`Imported ${importResponse.data.total} media items`);
+          // Create a response object similar to the expected format
+          importResponse = {
+            success: importResults.length > 0,
+            data: {
+              media: importResults,
+              total: importResults.length,
+              errors: importErrors,
+            },
+            message: `Imported ${importResults.length} media items`,
+          };
 
-            if (
-              importResponse.data.errors &&
-              importResponse.data.errors.length > 0
-            ) {
-              toast.warning(
-                `${importResponse.data.errors.length} media items failed to import`
+          // Check for import failures
+          if (importErrors.length > 0) {
+            hasUploadErrors = true;
+            uploadErrorMessages.push(
+              `${importErrors.length} media items failed to import`
+            );
+          }
+
+          // Check if we need to set the thumbnail from imported images
+          if (
+            selectedThumbnail &&
+            !finalThumbnailUrl &&
+            // Check the correct media array
+            Array.isArray(importResponse.data?.media) // Check if media array exists
+          ) {
+            // Find the selected thumbnail in imported images (using frontend ID)
+            const selectedMediaItem = mediaItems.find(
+              (item) => item.id === selectedThumbnail
+            );
+
+            if (selectedMediaItem && selectedMediaItem.url) {
+              // Search in the correct media array (importResponse.data.media)
+              const matchingImage = importResponse.data.media.find(
+                (img: any) => img.url === selectedMediaItem.url
               );
+
+              if (matchingImage && matchingImage.url) {
+                finalThumbnailUrl = matchingImage.url; // Store the URL
+              }
             }
           }
         } catch (importError: any) {
           console.error("Error during URL import:", importError);
-          toast.error(
+          hasUploadErrors = true;
+          uploadErrorMessages.push(
             `URL import error: ${importError.message || "Unknown error"}`
           );
         }
@@ -736,6 +801,16 @@ export default function NewProjectForm() {
         (item) =>
           (item.type === "youtube" && item.youtube_id) ||
           (item.type === "vimeo" && item.vimeo_id)
+      );
+
+      console.log(
+        "Video links to add:",
+        videoLinks.map((v) => ({
+          type: v.type,
+          url: v.url,
+          youtube_id: v.youtube_id,
+          vimeo_id: v.vimeo_id,
+        }))
       );
 
       if (videoLinks.length > 0) {
@@ -751,8 +826,8 @@ export default function NewProjectForm() {
               const videoResponse = await uploadVideoLinkAction(
                 username,
                 projectId,
-                videoItem.url,
                 {
+                  video_url: videoItem.url,
                   title: `${videoItem.type === "youtube" ? "YouTube" : "Vimeo"} video`,
                 }
               );
@@ -771,10 +846,29 @@ export default function NewProjectForm() {
         }
 
         if (errorCount > 0) {
-          toast.warning(
-            `${successCount} video links added, ${errorCount} failed`
+          hasUploadErrors = true;
+          uploadErrorMessages.push(
+            `${errorCount} video links failed to upload`
           );
         }
+      }
+
+      // Check if we have any upload errors - if so, fail the entire process
+      if (hasUploadErrors) {
+        // Delete the created project since media upload failed
+        try {
+          await deleteProjectAction(username, projectId);
+        } catch (deleteError) {
+          console.error(
+            "Failed to cleanup project after media upload failure:",
+            deleteError
+          );
+        }
+
+        const errorMessage = uploadErrorMessages.join("; ");
+        throw new Error(
+          `Media upload failed: ${errorMessage}. Project creation cancelled.`
+        );
       }
 
       // ----- Final Thumbnail Update -----
@@ -809,7 +903,7 @@ export default function NewProjectForm() {
       }
 
       setCurrentStep("Finalizing project...");
-      toast.success("Project created successfully");
+      toast.success("Project created successfully with all media uploaded!");
       router.push(`/project/${projectId}`);
     } catch (error: any) {
       console.error("Error creating project:", error);
@@ -821,15 +915,15 @@ export default function NewProjectForm() {
   };
 
   // Construct the project object for the preview
-  const projectPreview: Project = {
-    id: "new-project-preview", // Use a placeholder ID for new projects
+  const projectPreview = {
+    id: "new-project-preview",
     title: title || "New Project",
-    short_description: shortDescription || "New Project Description", // Or use description if you prefer
+    short_description: shortDescription || "New Project Description",
     images: mediaItems
       .filter((item) => item.type === "image")
-      .map((item) => ({ url: item.url })), // Map to expected structure
+      .map((item) => ({ url: item.url })),
     thumbnail_url: mediaItems.find((item) => item.id === selectedThumbnail)
-      ?.url, // Find the URL of the selected thumbnail
+      ?.url,
   };
 
   return (

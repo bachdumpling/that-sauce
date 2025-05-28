@@ -37,11 +37,11 @@ export function CompletedContent({
           />
         </div>
 
-        {/* <div className="w-full flex flex-col items-end justify-end">
+        <div className="w-full flex flex-col items-end justify-end">
           <Button asChild size="lg">
             <Link href="/profile">Add Portfolio</Link>
           </Button>
-        </div> */}
+        </div>
       </div>
     </div>
   );

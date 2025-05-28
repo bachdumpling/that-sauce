@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   updateProjectAction,
   getProjectByIdAction,
+  deleteProjectAction,
 } from "@/actions/project-actions";
 import { getOrganizationsAction } from "@/actions/organization-actions";
 import {
@@ -80,10 +81,13 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
       setIsLoading(true);
       setIsLoadingOrgs(true);
       try {
+        console.log("Loading project data for ID:", projectId);
+
         // Fetch project data
         const projectResponse = await getProjectByIdAction(projectId);
         if (projectResponse.success && projectResponse.data) {
-          const project = projectResponse.data.project;
+          const project = projectResponse.data;
+          console.log("Loaded project data:", project);
 
           // Set project details
           setTitle(project.title || "");
@@ -98,6 +102,7 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
 
           // Add images
           if (project.images && project.images.length > 0) {
+            console.log("Loading images:", project.images.length);
             project.images.forEach((image: ProjectImage) => {
               newMediaItems.push({
                 id: image.id,
@@ -110,12 +115,14 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
               // If this image is the thumbnail, select it
               if (project.thumbnail_url === image.url) {
                 setSelectedThumbnail(image.id);
+                console.log("Set thumbnail to image:", image.id);
               }
             });
           }
 
           // Add videos
           if (project.videos && project.videos.length > 0) {
+            console.log("Loading videos:", project.videos.length);
             project.videos.forEach((video: ProjectVideo) => {
               if (
                 video.url.includes("youtube.com") ||
@@ -138,8 +145,8 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
                   });
                 }
               } else if (video.url.includes("vimeo.com")) {
-                // Extract Vimeo ID
-                const vimeoId = video.url
+                // Extract Vimeo ID - handle various formats including https://vimeo.com/1072008273/ecb6710763
+                let vimeoId = video.url
                   .split("vimeo.com/")[1]
                   ?.split("?")[0]
                   .split("/")[0];
@@ -165,6 +172,7 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
             });
           }
 
+          console.log("Total media items loaded:", newMediaItems.length);
           setMediaItems(newMediaItems);
         } else {
           setLoadError("Failed to load project data");
@@ -174,7 +182,7 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
         // Fetch organizations
         const orgsResponse = await getOrganizationsAction();
         if (orgsResponse.success && orgsResponse.data) {
-          setOrganizations(orgsResponse.data);
+          setOrganizations(orgsResponse.data.organizations);
         } else {
           console.error("Failed to load organizations:", orgsResponse.message);
           toast.error("Failed to load client list");
@@ -241,11 +249,11 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
       setFiles((prevFiles) => [...prevFiles, ...validFiles]);
 
       // Create media items from files
-      const newMediaItems = validFiles.map((file) => {
+      const newMediaItems: MediaItem[] = validFiles.map((file) => {
         const isVideo = file.type.startsWith("video/");
         return {
           id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          type: isVideo ? "video" : "image",
+          type: (isVideo ? "video" : "image") as "image" | "video",
           url: URL.createObjectURL(file),
           file,
         };
@@ -304,11 +312,11 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
         setFiles((prevFiles) => [...prevFiles, ...validFiles]);
 
         // Create media items from files
-        const newMediaItems = validFiles.map((file) => {
+        const newMediaItems: MediaItem[] = validFiles.map((file) => {
           const isVideo = file.type.startsWith("video/");
           return {
             id: `file-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            type: isVideo ? "video" : "image",
+            type: (isVideo ? "video" : "image") as "image" | "video",
             url: URL.createObjectURL(file),
             file,
           };
@@ -363,8 +371,23 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
       ]);
       setMediaLink("");
     } else {
-      // Not a recognized video link
-      toast.error("Please enter a valid YouTube or Vimeo URL");
+      // Try fallback Vimeo pattern for URLs like https://vimeo.com/1072008273/ecb6710763
+      const vimeoFallbackMatch = mediaLink.match(/vimeo\.com\/(\d+)/);
+      if (vimeoFallbackMatch && vimeoFallbackMatch[1]) {
+        setMediaItems((prev) => [
+          ...prev,
+          {
+            id: `vimeo-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            type: "vimeo",
+            url: mediaLink,
+            vimeo_id: vimeoFallbackMatch[1],
+          },
+        ]);
+        setMediaLink("");
+      } else {
+        // Not a recognized video link
+        toast.error("Please enter a valid YouTube or Vimeo URL");
+      }
     }
   };
 
@@ -470,6 +493,15 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
     try {
       // Get current user's username
       const username = window.location.pathname.split("/")[1] || "";
+      console.log("Extracted username from URL:", username);
+
+      if (!username) {
+        throw new Error("Could not determine username from URL");
+      }
+
+      // Track upload success for validation
+      let hasUploadErrors = false;
+      let uploadErrorMessages: string[] = [];
 
       // First, update the project with basic info and potentially thumbnail URL
       const projectData: Partial<Project> & { thumbnail_url?: string } = {
@@ -483,7 +515,6 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
 
       // Add thumbnail_url if a thumbnail is selected
       if (selectedThumbnail) {
-        // This lookup uses the ID stored in selectedThumbnail
         const selectedMediaItem = mediaItems.find(
           (item) => item.id === selectedThumbnail
         );
@@ -509,38 +540,46 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
       }
 
       // Upload any new files if they exist
-      let newUploadedThumbnailId = null;
       if (files.length > 0) {
         setCurrentStep("Uploading media files...");
-        const fileUploads = [...files]; // These are true File objects
-
-        const mediaUploadResponse = await batchUploadMediaAction(
-          username,
-          projectId,
-          fileUploads
+        const fileUploads = [...files];
+        console.log(
+          "Files to upload:",
+          fileUploads.map((f) => ({ name: f.name, size: f.size, type: f.type }))
         );
 
-        if (!mediaUploadResponse.success) {
-          console.error("Media upload failed:", mediaUploadResponse);
-          throw new Error(
-            mediaUploadResponse.message || "Failed to upload media"
+        try {
+          const mediaUploadResponse = await batchUploadMediaAction(
+            username,
+            projectId,
+            fileUploads
           );
-        } else {
-          // No secondary thumbnail update needed, as URL is handled in the first update
-          // Log success/errors from the upload itself
-          if (
-            mediaUploadResponse.data?.images ||
-            mediaUploadResponse.data?.videos
-          ) {
-          }
-          if (
-            mediaUploadResponse.data?.errors &&
-            mediaUploadResponse.data.errors.length > 0
-          ) {
-            toast.warning(
-              `Some new media failed to upload: ${mediaUploadResponse.data.errors.length} errors`
+
+          if (!mediaUploadResponse.success) {
+            console.error("Media upload failed:", mediaUploadResponse);
+            hasUploadErrors = true;
+            uploadErrorMessages.push(
+              `File upload failed: ${(mediaUploadResponse as any).error || (mediaUploadResponse as any).message || "Unknown error"}`
             );
+          } else {
+            // Check for partial failures
+            if (
+              mediaUploadResponse.success &&
+              (mediaUploadResponse as any).data?.errors &&
+              (mediaUploadResponse as any).data.errors.length > 0
+            ) {
+              hasUploadErrors = true;
+              uploadErrorMessages.push(
+                `${(mediaUploadResponse as any).data.errors.length} files failed to upload`
+              );
+            }
           }
+        } catch (uploadError: any) {
+          console.error("Error during file upload:", uploadError);
+          hasUploadErrors = true;
+          uploadErrorMessages.push(
+            `File upload error: ${uploadError.message || "Unknown error"}`
+          );
         }
       }
 
@@ -548,32 +587,69 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
       const newVideoLinks = mediaItems.filter(
         (item) =>
           (item.type === "youtube" || item.type === "vimeo") &&
-          item.id.startsWith(`${item.type}-${Date.now()}`)
+          (item.id.startsWith("youtube-") || item.id.startsWith("vimeo-"))
+      );
+
+      console.log(
+        "Video links to add:",
+        newVideoLinks.map((v) => ({
+          type: v.type,
+          url: v.url,
+          youtube_id: v.youtube_id,
+          vimeo_id: v.vimeo_id,
+        }))
       );
 
       if (newVideoLinks.length > 0) {
         setCurrentStep("Adding video links...");
 
-        for (const videoItem of newVideoLinks) {
-          const videoResponse = await uploadVideoLinkAction(
-            username,
-            projectId,
-            videoItem.url,
-            {
-              title:
-                videoItem.type === "youtube" ? "YouTube Video" : "Vimeo Video",
-            }
-          );
+        let successCount = 0;
+        let errorCount = 0;
 
-          if (!videoResponse.success) {
-            console.error("Video link upload failed:", videoResponse);
-            toast.error(`Failed to add ${videoItem.type} video`);
+        for (const videoItem of newVideoLinks) {
+          try {
+            const videoResponse = await uploadVideoLinkAction(
+              username,
+              projectId,
+              {
+                video_url: videoItem.url,
+                title:
+                  videoItem.type === "youtube"
+                    ? "YouTube Video"
+                    : "Vimeo Video",
+              }
+            );
+
+            if (!videoResponse.success) {
+              console.error("Video link upload failed:", videoResponse);
+              errorCount++;
+            } else {
+              successCount++;
+            }
+          } catch (videoError: any) {
+            console.error("Error adding video link:", videoError);
+            errorCount++;
           }
+        }
+
+        if (errorCount > 0) {
+          hasUploadErrors = true;
+          uploadErrorMessages.push(
+            `${errorCount} video links failed to upload`
+          );
         }
       }
 
-      // Success
-      toast.success("Project updated successfully");
+      // Check if we have any upload errors - if so, show warning but don't fail
+      if (hasUploadErrors) {
+        const errorMessage = uploadErrorMessages.join("; ");
+        toast.warning(
+          `Project updated but some media failed to upload: ${errorMessage}`
+        );
+      } else {
+        toast.success("Project updated successfully with all media!");
+      }
+
       router.push(`/project/${projectId}`);
     } catch (error: any) {
       console.error("Error in updating project:", error);
@@ -604,15 +680,15 @@ export default function EditProjectForm({ projectId }: EditProjectFormProps) {
   }
 
   // Construct the project object for the preview
-  const projectPreview: Project = {
+  const projectPreview: any = {
     id: projectId,
     title: title,
-    short_description: shortDescription, // Or use description if you prefer
+    short_description: shortDescription,
     images: mediaItems
       .filter((item) => item.type === "image")
-      .map((item) => ({ url: item.url })), // Map to expected structure
+      .map((item) => ({ url: item.url })),
     thumbnail_url: mediaItems.find((item) => item.id === selectedThumbnail)
-      ?.url, // Find the URL of the selected thumbnail
+      ?.url,
   };
 
   return (

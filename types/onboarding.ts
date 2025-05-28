@@ -26,6 +26,31 @@ export interface OnboardingStatus {
 
   /** Whether social links have been verified (minimum required) */
   social_links_verified?: boolean;
+
+  /** Profile data from the profiles table */
+  profile?: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    user_role?: "creator" | "employer";
+    onboarding_step?: number;
+    onboarding_completed?: boolean;
+    organization_id?: string;
+    username?: string;
+    [key: string]: any;
+  };
+
+  /** Creator data from the creators table */
+  creator?: {
+    id: string;
+    profile_id: string;
+    username?: string;
+    bio?: string;
+    location?: string;
+    primary_role?: string[];
+    avatar_url?: string;
+    [key: string]: any;
+  };
 }
 
 /**

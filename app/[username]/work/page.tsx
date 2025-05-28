@@ -73,42 +73,49 @@ export default async function CreatorWorkPage({
 
   return (
     <div className="py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {creator.isOwner && (
-          <div className="group hover:opacity-90 transition-opacity">
-            <div className="overflow-hidden">
-              <div className="relative w-full pb-[75%] rounded-[16px] border border-gray-200">
-                <div className="absolute top-0 left-0 w-full h-full grid place-items-center">
-                  <Link href="/project/new">
-                    <Button
-                      variant="outline"
-                      className="flex flex-col items-center justify-center rounded-full p-2"
-                    >
-                      <Plus className="h-6 w-6 text-muted-foreground" />
-                    </Button>
-                  </Link>
+      {!creator ? (
+        <CreatorWorkError
+          error={{ message: "Creator not found" }}
+          username={username}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {creator.isOwner && (
+            <div className="group hover:opacity-90 transition-opacity">
+              <div className="overflow-hidden">
+                <div className="relative w-full pb-[75%] rounded-[16px] border border-gray-200">
+                  <div className="absolute top-0 left-0 w-full h-full grid place-items-center">
+                    <Link href="/project/new">
+                      <Button
+                        variant="outline"
+                        className="flex flex-col items-center justify-center rounded-full p-2"
+                      >
+                        <Plus className="h-6 w-6 text-muted-foreground" />
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {creator.projects && creator.projects.length > 0 ? (
-          <ProjectsContainer
-            projects={creator.projects}
-            isOwner={creator.isOwner}
-          />
-        ) : (
-          <div className="col-span-3 py-12 text-center">
-            <h3 className="text-lg font-medium text-muted-foreground">
-              No projects yet
-            </h3>
-            {creator.isOwner && (
-              <Button className="mt-4">Add Your First Project</Button>
-            )}
-          </div>
-        )}
-      </div>
+          {creator.projects && creator.projects.length > 0 ? (
+            <ProjectsContainer
+              projects={creator.projects}
+              isOwner={creator.isOwner ?? false}
+            />
+          ) : (
+            <div className="col-span-3 py-12 text-center">
+              <h3 className="text-lg font-medium text-muted-foreground">
+                No projects yet
+              </h3>
+              {creator.isOwner && (
+                <Button className="mt-4">Add Your First Project</Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

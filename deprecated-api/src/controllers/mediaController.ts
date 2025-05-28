@@ -23,11 +23,18 @@ function extractYouTubeId(url: string): string | null {
  * Extract Vimeo video ID from a Vimeo URL
  */
 function extractVimeoId(url: string): string | null {
-  // Handle various Vimeo URL formats
+  // Handle various Vimeo URL formats including https://vimeo.com/1072008273/ecb6710763
   const regExp =
     /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?))/;
   const match = url.match(regExp);
-  return match ? match[1] : null;
+
+  if (match) {
+    return match[1];
+  }
+
+  // Fallback: extract the first number after vimeo.com/
+  const simpleMatch = url.match(/vimeo\.com\/(\d+)/);
+  return simpleMatch ? simpleMatch[1] : null;
 }
 
 export const getMediaDetails = async (req: Request, res: Response) => {

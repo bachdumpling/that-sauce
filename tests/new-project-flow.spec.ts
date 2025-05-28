@@ -1,6 +1,9 @@
 import { test, expect, Page } from "@playwright/test";
 import path from "path";
 
+// Use authenticated state
+test.use({ storageState: "playwright/.auth/user.json" });
+
 // Test data
 const testProject = {
   title: "Test Creative Project",
@@ -63,6 +66,22 @@ test.describe("New Project Flow", () => {
     ).not.toBeVisible();
   });
 
+  test("should redirect unauthenticated users to sign-in", async ({
+    browser,
+  }) => {
+    // Create a new context without authentication
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Try to access the new project page without authentication
+    await page.goto("/project/new");
+
+    // Should be redirected to sign-in page
+    await expect(page).toHaveURL(/.*\/sign-in/);
+
+    await context.close();
+  });
+
   test("should handle file upload via drag and drop", async ({ page }) => {
     // Create a test image file
     const testImagePath = await createTestFile(
@@ -111,7 +130,7 @@ test.describe("New Project Flow", () => {
     await page.locator('[data-value="link"]').click();
 
     // Enter a Vimeo URL
-    const vimeoUrl = "https://vimeo.com/123456789";
+    const vimeoUrl = "https://vimeo.com/1072008273/ecb6710763";
     await page.locator('[data-testid="media-link-input"]').fill(vimeoUrl);
 
     // Click add link button

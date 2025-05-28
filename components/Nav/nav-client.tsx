@@ -73,7 +73,7 @@ export function NavClient({
         </EditProfileButton>
 
         {mainRoutes
-          .filter(route => route.path !== "/")
+          .filter((route) => route.path !== "/")
           .map((route) => (
             <Button
               key={route.path}
@@ -190,7 +190,10 @@ export function NavClient({
         {/* User Menu Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <div className="flex items-center cursor-pointer hover:text-primary transition-all duration-300 hover:bg-muted hover:rounded-full p-2">
+            <div
+              className="flex items-center cursor-pointer hover:text-primary transition-all duration-300 hover:bg-muted hover:rounded-full p-2"
+              data-testid="user-menu"
+            >
               <ChevronDownIcon className="w-4 h-4" />
             </div>
           </DropdownMenuTrigger>

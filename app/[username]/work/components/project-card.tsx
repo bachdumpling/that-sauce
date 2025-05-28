@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteProjectAction } from "@/actions/project-actions";
+import { toast } from "sonner";
 import Image from "next/image";
 
 interface Project {
@@ -64,13 +65,17 @@ export function ProjectCard({
             // If no onDelete handler was provided, refresh the route data
             router.refresh();
           }
+
+          toast.success("Project deleted successfully");
         } else {
           console.error("Failed to delete project:", response.error);
-          alert(`Error deleting project: ${response.message}`);
+          toast.error(
+            `Error deleting project: ${response.error || response.message || "Unknown error"}`
+          );
         }
       } catch (error) {
         console.error("Error deleting project:", error);
-        alert("An unexpected error occurred while deleting the project.");
+        toast.error("An unexpected error occurred while deleting the project.");
       } finally {
         setIsDeleting(false);
         // Close the dropdown after deletion attempt

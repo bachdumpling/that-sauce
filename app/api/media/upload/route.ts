@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { successResponse, errorResponse, unauthorizedResponse, validationErrorResponse, serverErrorResponse, notFoundResponse } from "@/lib/api-utils/response";
+import {
+  successResponse,
+  errorResponse,
+  unauthorizedResponse,
+  validationErrorResponse,
+  serverErrorResponse,
+  notFoundResponse,
+} from "@/lib/api-utils/response";
 
 // Helper functions
 function extractYouTubeId(url: string): string | null {
@@ -10,41 +17,71 @@ function extractYouTubeId(url: string): string | null {
 }
 
 function extractVimeoId(url: string): string | null {
-  const regExp = /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?))/;
+  // Handle various Vimeo URL formats including https://vimeo.com/1072008273/ecb6710763
+  const regExp =
+    /(?:vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?))/;
   const match = url.match(regExp);
-  return match ? match[1] : null;
+
+  if (match) {
+    return match[1];
+  }
+
+  // Fallback: extract the first number after vimeo.com/
+  const simpleMatch = url.match(/vimeo\.com\/(\d+)/);
+  return simpleMatch ? simpleMatch[1] : null;
 }
 
-function validateFileType(file: File): { isValid: boolean; type: "image" | "video" | null; error?: string } {
-  const allowedImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-  const allowedVideoTypes = ["video/mp4", "video/mov", "video/avi", "video/wmv", "video/webm"];
-  
+function validateFileType(file: File): {
+  isValid: boolean;
+  type: "image" | "video" | null;
+  error?: string;
+} {
+  const allowedImageTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+  const allowedVideoTypes = [
+    "video/mp4",
+    "video/mov",
+    "video/avi",
+    "video/wmv",
+    "video/webm",
+  ];
+
   if (allowedImageTypes.includes(file.type)) {
     return { isValid: true, type: "image" };
   }
-  
+
   if (allowedVideoTypes.includes(file.type)) {
     return { isValid: true, type: "video" };
   }
-  
-  return { 
-    isValid: false, 
-    type: null, 
-    error: `Unsupported file type: ${file.type}. Supported types: ${[...allowedImageTypes, ...allowedVideoTypes].join(", ")}` 
+
+  return {
+    isValid: false,
+    type: null,
+    error: `Unsupported file type: ${file.type}. Supported types: ${[...allowedImageTypes, ...allowedVideoTypes].join(", ")}`,
   };
 }
 
-async function verifyProjectOwnership(supabase: any, projectId: string, userId: string) {
+async function verifyProjectOwnership(
+  supabase: any,
+  projectId: string,
+  userId: string
+) {
   const { data: project, error } = await supabase
     .from("projects")
-    .select(`
+    .select(
+      `
       id,
       creator_id,
       creators!inner (
         id,
         profile_id
       )
-    `)
+    `
+    )
     .eq("id", projectId)
     .single();
 
@@ -66,8 +103,11 @@ async function verifyProjectOwnership(supabase: any, projectId: string, userId: 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return unauthorizedResponse();
     }
@@ -88,7 +128,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify project ownership
-      const project = await verifyProjectOwnership(supabase, project_id, user.id);
+      const project = await verifyProjectOwnership(
+        supabase,
+        project_id,
+        user.id
+      );
 
       // Extract video IDs
       let youtubeId = null;
@@ -239,10 +283,7 @@ export async function POST(request: NextRequest) {
       mediaRecord = { ...data, type: "video" };
     }
 
-    return successResponse(
-      mediaRecord,
-      "Media uploaded successfully"
-    );
+    return successResponse(mediaRecord, "Media uploaded successfully");
   } catch (error: any) {
     if (error.message.includes("Project not found")) {
       return notFoundResponse("Project");
@@ -252,4 +293,4 @@ export async function POST(request: NextRequest) {
     }
     return serverErrorResponse(error);
   }
-} 
+}

@@ -127,12 +127,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
   // Fetch any missing data or refresh if no initial data provided
   useEffect(() => {
-    // Skip fetching if we have initialData and already loaded it
-    if (
-      initialData &&
-      initialData.creatorData?.avatar_url &&
-      initialDataLoaded
-    ) {
+    // Only fetch if we don't have initial data at all
+    if (initialData && initialDataLoaded) {
       return;
     }
 
@@ -187,7 +183,12 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       }
     };
 
-    fetchProfileData();
+    // Only fetch if we don't have initial data
+    if (!initialData) {
+      fetchProfileData();
+    } else {
+      setInitialDataLoaded(true);
+    }
   }, [form, updateProfileData, initialData, initialDataLoaded]);
 
   // Handle role selection change - wrapped in useCallback
@@ -262,28 +263,17 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       if (response.success && response.data?.avatar_url) {
         form.setValue("avatar_url", response.data.avatar_url);
         updateProfileData({ avatar_url: response.data.avatar_url });
-        toast({
-          title: "Success",
-          description: "Profile image uploaded successfully",
-        });
+        toast.success("Profile image uploaded successfully");
       } else {
-        toast({
-          title: "Error",
-          description:
-            response.error ||
-            "Failed to upload profile image. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(
+          response.error || "Failed to upload profile image. Please try again."
+        );
         // Clear the avatar preview if upload failed
         setAvatarPreview(null);
         form.setValue("avatar_url", "");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload profile image. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to upload profile image. Please try again.");
       // Clear the avatar preview if upload failed
       setAvatarPreview(null);
       form.setValue("avatar_url", "");
@@ -318,21 +308,15 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       if (response.success) {
         router.push("/onboarding/social_links");
       } else {
-        toast({
-          title: "Error",
-          description:
-            response.error ||
-            "There was a problem saving your profile information. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(
+          response.error ||
+            "There was a problem saving your profile information. Please try again."
+        );
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          "There was a problem saving your profile information. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(
+        "There was a problem saving your profile information. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
