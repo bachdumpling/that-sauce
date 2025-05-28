@@ -1,0 +1,330 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Creative Portfolio Platform v2.0 - Cursor Rules
+
+## Project Overview
+You are working on a next-generation creative portfolio platform that enables creators to showcase their work with AI-powered analysis and intelligent search capabilities. The platform connects creative professionals with potential clients through semantic search and automated portfolio insights.
+
+## Architecture & Technology Stack
+
+### Frontend
+- **Framework**: Next.js 14+ with App Router
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **State Management**: React hooks, Context API
+- **Forms**: react-hook-form with zod validation
+
+### Backend
+- **API**: Next.js API Routes (serverless)
+- **Database**: Supabase (PostgreSQL with vector extensions)
+- **Authentication**: Supabase Auth with Row Level Security (RLS)
+- **File Storage**: Supabase Storage with CDN
+- **AI Processing**: Trigger.dev for background jobs
+
+### Key Dependencies
+- @supabase/supabase-js, @supabase/ssr
+- zod for validation
+- lucide-react for icons
+- next-themes for theme switching
+- sonner for notifications
+
+## Core Domain Models
+
+### User Hierarchy
+```
+User (Supabase Auth) → Profile → Creator
+```
+
+### Content Structure
+```
+Creator → Projects → Media (Images/Videos)
+Creator → Portfolio (AI-generated)
+```
+
+### Key Entities
+- **Users**: Authentication and basic info
+- **Creators**: Creative professional profiles
+- **Projects**: Individual creative works
+- **Media**: Images and videos within projects
+- **Organizations**: Client companies
+- **Portfolios**: AI-generated from creator's projects
+
+## File Organization & Patterns
+
+### Directory Structure
+```
+app/client/
+├── app/
+│   ├── api/                    # Next.js API routes
+│   ├── (auth-pages)/          # Authentication pages
+│   ├── [username]/            # Creator profile pages
+│   ├── onboarding/            # Multi-step onboarding
+│   ├── search/                # Search functionality
+│   └── project/               # Project management
+├── components/
+│   ├── ui/                    # shadcn/ui components
+│   ├── shared/                # Reusable components
+│   └── Nav/                   # Navigation components
+├── lib/
+│   ├── api/                   # API client utilities
+│   ├── api-utils/             # API server utilities
+│   └── constants/             # Application constants
+└── types/                     # TypeScript definitions
+```
+
+### Naming Conventions
+- **Files**: kebab-case (e.g., `creator-profile.tsx`)
+- **Components**: PascalCase (e.g., `CreatorProfile`)
+- **Variables/Functions**: camelCase (e.g., `getUserProfile`)
+- **Constants**: SCREAMING_SNAKE_CASE (e.g., `API_BASE_URL`)
+- **API Routes**: RESTful naming (e.g., `/api/creators/[username]`)
+
+## API Design Patterns
+
+### Response Format
+Always use consistent API response format:
+```typescript
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+```
+
+### Authentication
+- Use `requireAuth()` for protected endpoints
+- Use `getOptionalAuth()` for public endpoints that benefit from auth context
+- Always check ownership before allowing modifications
+- Implement proper RLS policies in Supabase
+
+### Error Handling
+- Use structured error responses (400, 401, 404, 422, 500)
+- Log errors server-side, never expose sensitive info to client
+- Provide user-friendly error messages
+
+### File Uploads
+- Support images: JPEG, PNG, GIF, WEBP (max 50MB)
+- Support videos: MP4, MOV, AVI, WMV, WEBM (max 50MB)
+- Use Supabase Storage with signed URLs
+- Generate thumbnails for videos when possible
+
+## Component Patterns
+
+### Server Components (Default)
+- Use for data fetching and static content
+- Leverage Supabase server client
+- Handle authentication via cookies
+
+### Client Components
+- Mark with "use client" directive
+- Use for interactivity, forms, real-time features
+- Use Supabase client-side client
+
+### Form Handling
+- Use react-hook-form with zod validation
+- Implement optimistic updates where appropriate
+- Show loading states and error feedback
+- Use server actions for form submissions
+
+### State Management
+- Prefer server state over client state
+- Use React hooks for local component state
+- Use Context for theme, user profile, and global state
+- Implement proper loading and error states
+
+## Database & Supabase Patterns
+
+### RLS Policies
+- Enable RLS on all tables
+- Creators can only modify their own content
+- Implement proper read policies for public content
+- Admin role for management operations
+
+### Data Fetching
+- Use server components for initial data loading
+- Implement proper error boundaries
+- Use Supabase real-time for live updates where needed
+- Implement pagination for large data sets
+
+### Vector Search (Future)
+- Prepare for AI embeddings in database
+- Design schema to support vector similarity search
+- Plan for hybrid search (vector + traditional filters)
+
+## AI Integration Guidelines
+
+### Content Analysis
+- Process images and videos asynchronously via Trigger.dev
+- Store analysis results in database
+- Implement fallback mechanisms for failed analysis
+- Generate embeddings for semantic search
+
+### Portfolio Generation
+- Auto-compile portfolios from creator projects
+- Provide manual curation options
+- Update portfolios when projects change
+- Include AI-generated insights and recommendations
+
+## Security Requirements
+
+### Authentication & Authorization
+- JWT tokens via Supabase Auth
+- Row Level Security on all data access
+- Proper session management
+- OAuth with Google integration
+
+### Data Protection
+- Validate all inputs with zod schemas
+- Sanitize user-generated content
+- Use signed URLs for media access
+- Implement rate limiting on API endpoints
+
+### File Security
+- Validate file types and sizes
+- Scan uploads for malicious content
+- Use CDN for secure media delivery
+- Implement proper access controls
+
+## Performance Guidelines
+
+### Page Performance
+- Target <2s initial load, <1s navigation
+- Implement proper loading states
+- Use Next.js Image optimization
+- Leverage edge caching where possible
+
+### Search Performance
+- Target <500ms search response time
+- Implement proper database indexing
+- Use pagination for large result sets
+- Cache frequently accessed data
+
+### Media Handling
+- Optimize images for web delivery
+- Generate multiple sizes/formats
+- Use lazy loading for media galleries
+- Implement progressive image loading
+
+## Code Quality Standards
+
+### TypeScript
+- Use strict mode
+- Define proper interfaces for all data structures
+- Avoid `any` type unless absolutely necessary
+- Use proper generic types for reusable components
+
+### Error Handling
+- Implement proper try-catch blocks
+- Use error boundaries for component errors
+- Log errors with sufficient context
+- Provide user-friendly error messages
+
+### Testing Approach
+- Write tests for critical business logic
+- Test API endpoints thoroughly
+- Implement proper mocking for external services
+- Use TypeScript for better test reliability
+
+## UI/UX Guidelines
+
+### Design System
+- Use shadcn/ui components consistently
+- Follow Tailwind CSS utility-first approach
+- Implement proper responsive design
+- Support both light and dark themes
+
+### User Experience
+- Provide clear loading states and progress indicators
+- Implement optimistic updates for better perceived performance
+- Use proper error states and recovery options
+- Ensure accessibility standards compliance
+
+### Creator Experience
+- Streamlined onboarding flow
+- Intuitive project creation and management
+- Real-time preview of portfolio changes
+- AI-powered insights and recommendations
+
+### Search Experience
+- Fast, intelligent search with filters
+- Visual search results with media previews
+- Save and share search queries
+- Personalized recommendations
+
+## Development Workflow
+
+### Git Practices
+- Use conventional commit messages
+- Create feature branches for new functionality
+- Implement proper code review process
+- Tag releases for deployment tracking
+
+### Environment Setup
+- Use environment variables for configuration
+- Separate development, staging, and production configs
+- Implement proper secrets management
+- Document environment setup process
+
+### Deployment
+- Use Vercel for Next.js deployment
+- Implement proper CI/CD pipeline
+- Monitor application performance and errors
+- Plan for zero-downtime deployments
+
+## Key Business Rules
+
+### Creator Management
+- All creators must complete onboarding process
+- Profile approval required before public visibility
+- Creators own their content and can export/delete
+- Support for different creator tiers (Free, Pro, Enterprise)
+
+### Content Policies
+- Family-friendly content only
+- Respect intellectual property rights
+- Implement content moderation workflows
+- Support DMCA takedown procedures
+
+### Search & Discovery
+- Prioritize high-quality, complete portfolios
+- Implement relevance scoring for search results
+- Support both public and private portfolio viewing
+- Enable creator-client matching algorithms
+
+## Common Pitfalls to Avoid
+
+1. **Over-fetching data**: Use proper pagination and selective queries
+2. **Insecure API endpoints**: Always validate authentication and authorization
+3. **Poor error handling**: Implement comprehensive error boundaries and logging
+4. **Inefficient re-renders**: Use React.memo and useMemo appropriately
+5. **Blocking file uploads**: Use background processing for heavy operations
+6. **Inconsistent styling**: Stick to the design system and Tailwind utilities
+7. **Security vulnerabilities**: Always validate inputs and implement proper RLS
+
+## Future Considerations
+
+### AI Integration
+- Prepare for advanced content analysis
+- Plan for semantic search capabilities
+- Design for AI-powered recommendations
+- Consider real-time collaboration features
+
+### Scalability
+- Design for horizontal scaling
+- Implement proper caching strategies
+- Plan for CDN integration
+- Consider microservices architecture for complex features
+
+### Analytics & Insights
+- Track user engagement metrics
+- Monitor search effectiveness
+- Analyze creator success patterns
+- Implement A/B testing framework
+
+---
+
+**Remember**: This platform transforms how creative work is presented, discovered, and evaluated. Every feature should contribute to connecting creative professionals with potential clients through intelligent, AI-driven experiences.

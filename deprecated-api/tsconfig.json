@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "**/*.ts",
+    "src/**/*",
+    "api/**/*",
+    "trigger.config.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

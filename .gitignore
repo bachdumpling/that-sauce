@@ -1,0 +1,97 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/tests/fixtures/test-*
+/tests/screenshots/
+.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Build files
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.swp
+
+# Environment variables
+.env
+.env.*.local
+
+# Dependencies and package locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Monorepo specific
+client/node_modules/
+client/dist/
+
+# Custom exclusions
+custom_folder_to_ignore/
+
+# http
+*.http

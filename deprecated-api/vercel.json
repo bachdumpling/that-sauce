@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "src": "api/app.ts",
+      "use": "@vercel/node",
+      "config": {
+        "buildCommand": "npx puppeteer browsers install chrome && tsc"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/app.ts"
+    }
+  ]
+}
