@@ -305,20 +305,74 @@ export async function updateCreatorProfileAction(
       return { success: false, error: "Unauthorized" };
     }
 
-    // Update creator profile
-    const { data: updatedCreator, error: updateError } = await supabase
-      .from("creators")
-      .update({
-        ...profileData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("username", username)
-      .select()
-      .single();
+    // Split the data based on which table the fields belong to
+    const creatorFields = {
+      username: profileData.username,
+      location: profileData.location,
+      bio: profileData.bio,
+      primary_role: profileData.primary_role,
+      social_links: profileData.social_links,
+      years_of_experience: profileData.years_of_experience,
+      work_email: profileData.work_email,
+      banner_url: profileData.banner_url,
+      avatar_url: profileData.avatar_url,
+    };
 
-    if (updateError) {
-      console.error("Error updating creator profile:", updateError);
-      return { success: false, error: "Failed to update profile" };
+    const profileFields = {
+      first_name: profileData.first_name,
+      last_name: profileData.last_name,
+    };
+
+    // Remove undefined fields from both objects
+    const filteredCreatorFields = Object.fromEntries(
+      Object.entries(creatorFields).filter(([_, value]) => value !== undefined)
+    );
+
+    const filteredProfileFields = Object.fromEntries(
+      Object.entries(profileFields).filter(([_, value]) => value !== undefined)
+    );
+
+    console.log("Creator fields to update:", filteredCreatorFields);
+    console.log("Profile fields to update:", filteredProfileFields);
+
+    // Update creator profile if there are fields to update
+    let updatedCreator = existingCreator;
+    if (Object.keys(filteredCreatorFields).length > 0) {
+      const { data, error: updateError } = await supabase
+        .from("creators")
+        .update({
+          ...filteredCreatorFields,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("username", username)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error updating creator profile:", updateError);
+        return { success: false, error: "Failed to update creator profile" };
+      }
+
+      updatedCreator = data;
+    }
+
+    // Update profile table if there are fields to update
+    if (Object.keys(filteredProfileFields).length > 0) {
+      const { error: profileUpdateError } = await supabase
+        .from("profiles")
+        .update({
+          ...filteredProfileFields,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (profileUpdateError) {
+        console.error("Error updating profile:", profileUpdateError);
+        return {
+          success: false,
+          error: "Failed to update profile information",
+        };
+      }
     }
 
     // Revalidate all possible paths related to this creator

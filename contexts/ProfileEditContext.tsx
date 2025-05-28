@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { Creator } from "@/types";
-import { checkCreatorExistsAction } from "@/actions/creator-actions";
+import { getCreatorAction } from "@/actions/creator-actions";
 import ProfileEditDialog from "@/app/[username]/components/profile-edit-dialog";
 import { updateCreatorProfileAction } from "@/actions/creator-actions";
 import { toast } from "sonner";
@@ -19,6 +19,22 @@ interface ProfileEditContextType {
   openProfileDialog: (username?: string) => void;
   closeProfileDialog: () => void;
   currentCreatorUsername: string | null;
+}
+
+// Define the form state type properly
+interface ProfileFormState {
+  username: string;
+  avatar_url: string;
+  banner_url: string;
+  first_name: string;
+  last_name: string;
+  bio: string;
+  location: string;
+  years_of_experience: string;
+  work_email: string;
+  primary_role: string[];
+  social_links: Record<string, string>;
+  [key: string]: any; // Allow dynamic social platform keys
 }
 
 const ProfileEditContext = createContext<ProfileEditContextType>({
@@ -40,8 +56,8 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
   const [creator, setCreator] = useState<Creator | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state
-  const [profileForm, setProfileForm] = useState({
+  // Form state with proper typing
+  const [profileForm, setProfileForm] = useState<ProfileFormState>({
     username: "",
     avatar_url: "",
     banner_url: "",
@@ -59,12 +75,18 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
   const openProfileDialog = async (username?: string) => {
     if (username) {
       try {
-        const creatorData = await checkCreatorExistsAction(username);
+        const { data: creatorData, error } = await getCreatorAction(username);
+        if (error) {
+          console.error("Error fetching creator:", error);
+          toast.error("Could not load profile data");
+          return;
+        }
+
         setCreator(creatorData);
         setCurrentCreatorUsername(username);
 
         // Initialize form with creator data
-        const initialForm = {
+        const initialForm: ProfileFormState = {
           username: creatorData.username || "",
           avatar_url: creatorData.avatar_url || "",
           banner_url: creatorData.banner_url || "",
@@ -83,10 +105,13 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
         if (creatorData.social_links) {
           SOCIAL_PLATFORMS.forEach((platform) => {
             initialForm[`social_${platform.id}`] =
-              creatorData.social_links?.[platform.id] || "";
+              (creatorData.social_links as Record<string, string>)?.[
+                platform.id
+              ] || "";
           });
         }
 
+        console.log("Setting profile form with data:", initialForm);
         setProfileForm(initialForm);
         setIsProfileDialogOpen(true);
       } catch (error) {
@@ -114,6 +139,7 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
           ...prev.social_links,
           [platformId]: value,
         },
+        [name]: value, // Also update the dynamic key for form access
       }));
     } else {
       setProfileForm((prev) => ({
@@ -136,9 +162,9 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
     setIsSubmitting(true);
     try {
       // Prepare social links as a JSON object
-      const socialLinks = {};
+      const socialLinks: Record<string, string> = {};
       SOCIAL_PLATFORMS.forEach((platform) => {
-        const value = profileForm[`social_${platform.id}`];
+        const value = profileForm[`social_${platform.id}`] as string;
         if (value) {
           socialLinks[platform.id] = value;
         }
