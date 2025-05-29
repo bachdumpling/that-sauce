@@ -96,3 +96,6 @@ custom_folder_to_ignore/
 
 # http
 *.http
+
+# Trigger
+.trigger

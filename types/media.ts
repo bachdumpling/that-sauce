@@ -42,11 +42,24 @@ export interface MediaBatchUploadResponse {
 
 export interface ScrapedMedia {
   url: string;
-  type: MediaType;
   alt_text?: string;
-  order?: number;
+  type: "image" | "video";
+  order: number;
   youtube_id?: string;
   vimeo_id?: string;
+}
+
+export interface ScraperResult {
+  source_url: string;
+  media: ScrapedMedia[];
+  total: number;
+}
+
+export interface ScraperPayload {
+  url: string;
+  projectId?: string;
+  userId: string;
+  autoImport?: boolean;
 }
 
 export interface ScrapeResponse {

@@ -17,9 +17,9 @@ export default function SearchHistoryPage() {
           <SearchHistory />
         </div>
 
-        <div className="flex-1">
+        {/* <div className="flex-1">
           <PopularSearches />
-        </div>
+        </div> */}
       </div>
     </div>
   );
