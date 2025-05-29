@@ -73,7 +73,7 @@ export function SearchHistory() {
         setHistory([]);
         setError("Received invalid history data format");
       }
-    } catch (err) {
+    } catch (err: any) {
       if (
         err.message?.includes("401") ||
         err.message?.includes("Unauthorized")
@@ -118,14 +118,20 @@ export function SearchHistory() {
   };
 
   // Execute search from history
-  const handleSearchFromHistory = (query: string, contentType: string = "all") => {
-    // Include both required parameters: role and content_type 
+  const handleSearchFromHistory = (
+    query: string,
+    contentType: string = "all"
+  ) => {
+    // Include both required parameters: role and content_type
     // Using contentType from the search history entry if it's not "all"
-    const contentTypeParam = contentType && contentType !== "all" 
-      ? `&content_type=${contentType}` 
-      : "";
-      
-    router.push(`/search/results?q=${encodeURIComponent(query)}&role=designer${contentTypeParam}`);
+    const contentTypeParam =
+      contentType && contentType !== "all"
+        ? `&content_type=${contentType}`
+        : "";
+
+    router.push(
+      `/search/results?q=${encodeURIComponent(query)}&role=designer${contentTypeParam}`
+    );
     return undefined;
   };
 
@@ -227,7 +233,9 @@ export function SearchHistory() {
                 className="flex items-center justify-between p-3 rounded-md hover:bg-accent/50 group"
               >
                 <button
-                  onClick={() => handleSearchFromHistory(entry.query, entry.content_type)}
+                  onClick={() =>
+                    handleSearchFromHistory(entry.query, entry.content_type)
+                  }
                   className="flex items-center flex-1 text-left"
                 >
                   <span className="font-medium">{entry.query}</span>

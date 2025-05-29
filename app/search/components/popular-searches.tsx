@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PopularSearch, getPopularSearches } from "@/lib/api/search";
+import { PopularSearch, getPopularSearches } from "@/lib/api/client/search";
 import { useRouter } from "next/navigation";
 import {
   Card,

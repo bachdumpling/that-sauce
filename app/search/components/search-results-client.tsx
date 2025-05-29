@@ -6,20 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { search } from "@/lib/api/search";
-import { SearchResult } from "@/components/shared/types";
+import { CreatorWithContent, SearchResponse } from "@/types/search";
+import { SearchResult, ContentItem } from "@/components/shared/types";
 import { CreatorResultCard } from "@/components/shared/creator-result-card";
 import { Filter } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+
 interface SearchResultsData {
   success: boolean;
-  data: {
-    results: SearchResult[];
-    page: number;
-    limit: number;
-    total: number;
-    query: string;
-    content_type: "all" | "videos" | "images";
-    processed_query?: string;
-  };
+  data: SearchResponse;
 }
 
 interface SearchResultsClientProps {
@@ -53,6 +48,7 @@ export function SearchResultsClient({
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
   const [selectedStyles, setSelectedStyles] = useState<string[]>(styles || []);
+  const [user, setUser] = useState<any>(null);
   const [searchParams, setSearchParams] = useState({
     query,
     contentType,
@@ -63,6 +59,98 @@ export function SearchResultsClient({
     hasDocuments,
     documentsCount,
   });
+
+  // Get user for CreatorResultCard
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+    getUser();
+  }, []);
+
+  // Transform CreatorWithContent to SearchResult format for the CreatorResultCard
+  const transformToSearchResult = (
+    creatorWithContent: CreatorWithContent
+  ): SearchResult => {
+    // Safety checks
+    if (!creatorWithContent) {
+      console.error(
+        "transformToSearchResult: creatorWithContent is null/undefined"
+      );
+      throw new Error("Invalid search result data");
+    }
+
+    if (!creatorWithContent.creator) {
+      console.error(
+        "transformToSearchResult: creatorWithContent.creator is null/undefined",
+        creatorWithContent
+      );
+      throw new Error("Invalid creator data in search result");
+    }
+
+    const content: ContentItem[] = [];
+
+    // Add all images and videos from all projects
+    if (
+      creatorWithContent.projects &&
+      Array.isArray(creatorWithContent.projects)
+    ) {
+      creatorWithContent.projects.forEach((project) => {
+        // Add images
+        if (project.images && Array.isArray(project.images)) {
+          project.images.forEach((image) => {
+            content.push({
+              id: image.id,
+              type: "image",
+              url: image.url,
+              title: image.alt_text,
+              description: project.description,
+              project_id: project.id,
+              project_title: project.title,
+            });
+          });
+        }
+
+        // Add videos
+        if (project.videos && Array.isArray(project.videos)) {
+          project.videos.forEach((video) => {
+            content.push({
+              id: video.id,
+              type: "video",
+              url: video.url,
+              title: video.title || project.title,
+              description: video.description || project.description,
+              project_id: project.id,
+              project_title: project.title,
+              youtube_id: video.youtube_id,
+              vimeo_id: video.vimeo_id,
+            });
+          });
+        }
+      });
+    }
+
+    return {
+      profile: {
+        id: creatorWithContent.creator.id,
+        username: creatorWithContent.creator.username,
+        location: creatorWithContent.creator.location,
+        bio: creatorWithContent.creator.bio,
+        // Convert verification_status to primary_role array if needed
+        primary_role: role ? [role] : undefined,
+      },
+      score: creatorWithContent.total_score,
+      content,
+    };
+  };
 
   // Initial search when component mounts
   useEffect(() => {
@@ -134,6 +222,9 @@ export function SearchResultsClient({
         documentCount: documentsCount,
       });
 
+      // Debug logging
+      console.log("Search API response:", data);
+
       // Validate the response structure
       if (
         data &&
@@ -141,6 +232,8 @@ export function SearchResultsClient({
         data.data &&
         Array.isArray(data.data.results)
       ) {
+        console.log("Search results count:", data.data.results.length);
+        console.log("First result structure:", data.data.results[0]);
         setResults(data);
       } else if (data && data.success === false) {
         // Handle error response
@@ -308,13 +401,33 @@ export function SearchResultsClient({
       {/* Results */}
       {results && results.data.results.length > 0 ? (
         <div className="space-y-14">
-          {results.data.results.map((creator) => (
-            <CreatorResultCard
-              key={creator.profile.id}
-              creator={creator}
-              role={role}
-            />
-          ))}
+          {results.data.results
+            .map((creatorWithContent, index) => {
+              // Safety check for malformed data
+              if (
+                !creatorWithContent ||
+                !creatorWithContent.creator ||
+                !creatorWithContent.creator.id
+              ) {
+                console.warn(
+                  "Malformed search result at index",
+                  index,
+                  creatorWithContent
+                );
+                return null;
+              }
+
+              return (
+                <CreatorResultCard
+                  key={creatorWithContent.creator.id}
+                  creator={transformToSearchResult(creatorWithContent)}
+                  role={role}
+                  user={user}
+                  creatorIndex={index}
+                />
+              );
+            })
+            .filter(Boolean)}
         </div>
       ) : (
         <div className="text-center py-20">

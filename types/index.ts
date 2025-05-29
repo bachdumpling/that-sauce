@@ -4,3 +4,5 @@ export * from "./creator";
 export * from "./project";
 export * from "./media";
 export * from "./onboarding";
+export * from "./analysis";
+export * from "./search";

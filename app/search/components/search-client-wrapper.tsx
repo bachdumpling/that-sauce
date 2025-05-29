@@ -16,6 +16,15 @@ import {
   FileText,
   DollarSign,
   History,
+  ArrowRight,
+  Zap,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Clock,
+  Image as ImageIcon,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +33,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { useRouter, useSearchParams } from "next/navigation";
 import { search, enhanceSearchPrompt } from "@/lib/api/search";
 import { CreatorCard } from "@/components/shared/creator-card";
-import { SearchResult } from "@/components/shared/types";
+import { GroupedSearchResult } from "@/lib/search/utils";
 import {
   Accordion,
   AccordionContent,
@@ -75,29 +84,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
+import {
+  CreatorWithContent,
+  SearchResponse,
+  SearchEnhancement,
+} from "@/types/search";
 
 interface SearchResults {
   success: boolean;
-  data: {
-    results: SearchResult[];
-    page: number;
-    limit: number;
-    total: number;
-    content_type: "all" | "videos" | "images";
-  };
+  data: SearchResponse;
 }
 
 interface RefinementQuestion {
   question: string;
   options: string[];
-}
-
-interface SearchEnhancement {
-  success: boolean;
-  data: {
-    original_query: string;
-    enhancement: RefinementQuestion[];
-  };
 }
 
 interface SearchClientWrapperProps {
@@ -254,24 +254,32 @@ export function SearchClientWrapper({
 }: SearchClientWrapperProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // State for search interface
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [results, setResults] = useState<SearchResults | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(initialRole);
   const [showVideosOnly, setShowVideosOnly] = useState(
     initialContentType === "videos"
   );
-  const [selectedRole, setSelectedRole] = useState(initialRole);
-  const [filesUploaded, setFilesUploaded] = useState<File[]>([]);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
-  const [mediaFilter, setMediaFilter] = useState("all");
-  const [isRefinementOpen, setIsRefinementOpen] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<string>(initialContentType);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+
+  // File upload state
+  const [filesUploaded, setFilesUploaded] = useState<File[]>([]);
+
+  // Pagination and limit states
+  const [limit, setLimit] = useState(5);
+  const [page, setPage] = useState(1);
+
+  // Budget filter state
+  const [hasBudgetFilter, setHasBudgetFilter] = useState(false);
+  const [maxBudget, setMaxBudget] = useState(200);
+
+  // AI Enhancement states
   const [isRefining, setIsRefining] = useState(false);
   const [isRefinementLoading, setIsRefinementLoading] = useState(false);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [refinementEnhancement, setRefinementEnhancement] = useState<
     RefinementQuestion[]
   >([]);
@@ -279,18 +287,13 @@ export function SearchClientWrapper({
     Record<string, string>
   >({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-  const [maxBudget, setMaxBudget] = useState<number>(200);
-  const [hasBudgetFilter, setHasBudgetFilter] = useState(false);
+
+  // Upload dialog state
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+
+  // Role visibility state
   const [showAllRoles, setShowAllRoles] = useState(false);
   const visibleRoles = showAllRoles ? talentRoles : talentRoles.slice(0, 15);
-
-  // Perform initial search if query and role are provided
-  useEffect(() => {
-    if (initialQuery && initialRole) {
-      performSearch(initialQuery, initialContentType, initialRole);
-    }
-  }, [initialQuery, initialContentType, initialRole]);
 
   const handleExampleClick = (query: string) => {
     setSearchQuery(query);
@@ -306,7 +309,7 @@ export function SearchClientWrapper({
 
     setIsLoading(true);
     try {
-      const data = await search({
+      await search({
         q: query,
         contentType,
         limit,
@@ -314,7 +317,8 @@ export function SearchClientWrapper({
         role,
         subjects,
       });
-      setResults(data);
+      // Note: We don't handle results here as this component is for search input only
+      // Results are displayed on the results page
     } catch (err) {
       console.error("Search error:", err);
     } finally {
@@ -385,7 +389,6 @@ export function SearchClientWrapper({
 
   const clearSearch = () => {
     setSearchQuery("");
-    setResults(null);
     router.push("/search");
   };
 
@@ -406,7 +409,6 @@ export function SearchClientWrapper({
     setMediaFilter("all");
     setFilesUploaded([]);
     setSearchQuery("");
-    setResults(null);
     setIsRefining(false);
 
     // Update URL to reflect the role change without any query
@@ -469,10 +471,10 @@ export function SearchClientWrapper({
 
     setIsRefinementLoading(true);
     try {
-      const response = await enhanceSearchPrompt({ query: searchQuery });
+      const response = await enhanceSearchPrompt(searchQuery);
 
-      if (response.success && response.data.enhancement) {
-        setRefinementEnhancement(response.data.enhancement);
+      if (response && response.enhancement) {
+        setRefinementEnhancement(response.enhancement);
         setIsRefining(true);
 
         // Reset selected options instead of initializing with first option
