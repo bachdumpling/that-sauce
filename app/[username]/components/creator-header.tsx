@@ -1,27 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  MessageCircle,
-  Plus,
-  Pencil,
-  Share,
-  MapPin,
-  Upload,
-  Camera,
-} from "lucide-react";
-import TiltedCard from "@/components/ui/tilted-card";
+import { Upload, Camera } from "lucide-react";
 import { Creator } from "@/types";
 import { usePathname } from "next/navigation";
-import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
-import { SocialIcon } from "@/components/ui/social-icon";
 import LoadingAnimation from "@/components/LoadingAnimation";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { uploadCreatorBannerAction } from "@/actions/creator-actions";
 import Image from "next/image";
-import { useProfileEdit } from "@/contexts/ProfileEditContext";
 import { ProfileInfo } from "@/components/shared/ProfileInfo";
 
 interface CreatorHeaderProps {
@@ -31,7 +17,6 @@ interface CreatorHeaderProps {
 
 export function CreatorHeader({ creator, username }: CreatorHeaderProps) {
   const pathname = usePathname();
-  const { openProfileDialog } = useProfileEdit();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -84,16 +69,14 @@ export function CreatorHeader({ creator, username }: CreatorHeaderProps) {
     return <LoadingAnimation />;
   }
 
+  const hasImage =
+    creator?.banner_url || creator?.projects?.[0]?.images?.[0]?.url;
 
   return (
-    <div className="flex flex-row items-center justify-evenly gap-10 p-8">
+    <div className="flex flex-row items-center justify-evenly p-20">
       <ProfileInfo creator={creator} username={username} />
 
-      <div
-        className="items-center grid place-items-center aspect-[4/3] max-w-[600px] w-full justify-self-center relative"
-        onMouseEnter={() => creator?.isOwner && setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
+      <div className="items-center grid place-items-center aspect-[4/3] max-w-[600px] w-full justify-self-center relative">
         {/* Hidden file input */}
         <input
           type="file"
@@ -104,55 +87,123 @@ export function CreatorHeader({ creator, username }: CreatorHeaderProps) {
         />
 
         {/* Header Banner */}
-        <TiltedCard
-          imageSrc={
-            creator?.banner_url || creator?.projects?.[0]?.images?.[0]?.url
-          }
-          altText="Header Banner"
-          captionText={
-            creator?.isOwner ? "Click to upload banner" : "Header Banner"
-          }
-          fullSize={true}
-          rotateAmplitude={12}
-          scaleOnHover={1.1}
-          showMobileWarning={false}
-          showTooltip={creator?.isOwner}
-          displayOverlayContent={creator?.isOwner && isHovering}
-          overlayContent={
-            creator?.isOwner ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="bg-black/70 dark:bg-black/80 p-4 rounded-lg">
-                  {isUploading ? (
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
-                      <p className="text-white text-lg">Uploading...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Camera className="h-12 w-12 text-white mb-2 mx-auto" />
-                      <p className="text-white text-xl font-semibold text-center">
-                        Upload Banner
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="gap-2 w-full h-full">
-                <p className="text-white text-4xl font-bold">
-                  {creator?.first_name} {creator?.last_name}
-                </p>
-                <p className="text-white text-xl font-bold">
-                  {creator?.primary_role && creator?.primary_role[0]}
-                </p>
-              </div>
-            )
-          }
-          className={creator?.isOwner && !isUploading ? "cursor-pointer" : ""}
+        <div
+          className={`relative w-full h-full rounded-[15px] overflow-hidden border border-gray-200 shadow-lg group transition-all duration-300 ${
+            creator?.isOwner && !isUploading
+              ? "cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
+              : ""
+          }`}
+          onMouseEnter={() => creator?.isOwner && setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
           onClick={
             creator?.isOwner && !isUploading ? handleBannerClick : undefined
           }
-        />
+        >
+          {/* Background Image or Empty State */}
+          {hasImage ? (
+            <Image
+              src={
+                creator?.banner_url ||
+                creator?.projects?.[0]?.images?.[0]?.url ||
+                ""
+              }
+              alt="Header Banner"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 600px"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 flex items-center justify-center relative">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='37' cy='37' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                  }}
+                />
+              </div>
+
+              <div className="text-center space-y-4 z-10">
+                {creator?.isOwner ? (
+                  <>
+                    <div className="w-20 h-20 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mx-auto">
+                      <Upload className="h-10 w-10 text-primary/60" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-semibold text-foreground mb-2">
+                        Add a banner image
+                      </h3>
+                      <p className="text-muted-foreground max-w-sm">
+                        Upload a banner to make your portfolio stand out and
+                        showcase your creative style.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+                      <Camera className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-semibold text-foreground mb-2">
+                        {creator?.first_name || creator?.username}'s Portfolio
+                      </h3>
+                      <p className="text-muted-foreground">
+                        {(creator?.primary_role && creator?.primary_role[0]) ||
+                          "Creative Professional"}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Overlay for owner interactions */}
+          {creator?.isOwner && (isHovering || isUploading) && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-all duration-300 flex items-center justify-center z-10">
+              <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-2xl">
+                {isUploading ? (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-white/30 border-t-white mb-3"></div>
+                    <p className="text-white text-lg font-medium">
+                      Uploading...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200">
+                      <Camera className="h-8 w-8 text-white" />
+                    </div>
+                    <p className="text-white text-xl font-semibold text-center">
+                      {hasImage ? "Change Banner" : "Upload Banner"}
+                    </p>
+                    <p className="text-white/80 text-sm mt-1">
+                      {hasImage
+                        ? "Click to update your banner image"
+                        : "Add a banner to showcase your work"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Text overlay for non-owner when image exists */}
+          {!creator?.isOwner && hasImage && (
+            <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-black/40 to-transparent">
+              <div className="absolute bottom-8 left-8">
+                <p className="text-white text-4xl font-bold drop-shadow-lg">
+                  {creator?.first_name} {creator?.last_name}
+                </p>
+                <p className="text-white/90 text-xl font-medium drop-shadow-md">
+                  {creator?.primary_role && creator?.primary_role[0]}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

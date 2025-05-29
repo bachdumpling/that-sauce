@@ -16,9 +16,10 @@ import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
 
 interface ProfileEditContextType {
   isProfileDialogOpen: boolean;
-  openProfileDialog: (username?: string) => void;
+  openProfileDialog: (username?: string, initialTab?: string) => void;
   closeProfileDialog: () => void;
   currentCreatorUsername: string | null;
+  initialTab?: string;
 }
 
 // Define the form state type properly
@@ -42,6 +43,7 @@ const ProfileEditContext = createContext<ProfileEditContextType>({
   openProfileDialog: () => {},
   closeProfileDialog: () => {},
   currentCreatorUsername: null,
+  initialTab: undefined,
 });
 
 export function useProfileEdit() {
@@ -55,6 +57,7 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
   >(null);
   const [creator, setCreator] = useState<Creator | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initialTab, setInitialTab] = useState<string | undefined>(undefined);
 
   // Form state with proper typing
   const [profileForm, setProfileForm] = useState<ProfileFormState>({
@@ -71,8 +74,11 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
     social_links: {},
   });
 
-  // Open profile dialog with a specific username
-  const openProfileDialog = async (username?: string) => {
+  // Open profile dialog with a specific username and optional initial tab
+  const openProfileDialog = async (
+    username?: string,
+    initialTabParam?: string
+  ) => {
     if (username) {
       try {
         const { data: creatorData, error } = await getCreatorAction(username);
@@ -84,6 +90,7 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
 
         setCreator(creatorData);
         setCurrentCreatorUsername(username);
+        setInitialTab(initialTabParam);
 
         // Initialize form with creator data
         const initialForm: ProfileFormState = {
@@ -238,6 +245,7 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
         openProfileDialog,
         closeProfileDialog,
         currentCreatorUsername,
+        initialTab,
       }}
     >
       {children}
@@ -251,6 +259,7 @@ export function ProfileEditProvider({ children }: { children: ReactNode }) {
         handlePrimaryRoleChange={handlePrimaryRoleChange}
         handleProfileUpdate={handleProfileUpdate}
         isSubmitting={isSubmitting}
+        initialTab={initialTab}
       />
     </ProfileEditContext.Provider>
   );

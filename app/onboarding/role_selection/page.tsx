@@ -1,5 +1,6 @@
 import { getOnboardingStatusAction } from "@/actions/onboarding-actions";
 import { RoleSelectionForm } from "./role-selection-form";
+import { OnboardingContainer } from "../components/onboarding-container";
 
 export const metadata = {
   title: "Choose Your Role | Onboarding",
@@ -18,19 +19,11 @@ export default async function RoleSelectionPage() {
     undefined;
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Choose Your Role
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Select whether you're a creator or looking to hire
-          </p>
-        </div>
-
-        <RoleSelectionForm initialData={{ currentRole }} />
-      </div>
-    </div>
+    <OnboardingContainer
+      title="Choose Your Role"
+      description="Select whether you're a creator or looking to hire"
+    >
+      <RoleSelectionForm initialData={{ currentRole }} />
+    </OnboardingContainer>
   );
 }

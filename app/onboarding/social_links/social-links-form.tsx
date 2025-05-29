@@ -9,6 +9,8 @@ import {
 } from "@/actions/onboarding-actions";
 import { checkUsernameAvailabilityAction } from "@/actions/creator-actions";
 import { SocialLinks } from "@/types/onboarding";
+import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
+import { SocialIcon } from "@/components/ui/social-icon";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,38 +25,46 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-import { X } from "lucide-react";
+import { X, Globe } from "lucide-react";
 import { useProfilePreview } from "../components/profile-preview-context";
 import { OnboardingNavigation } from "../components/onboarding-navigation";
 
-// Platform detection patterns
-const PLATFORM_PATTERNS = {
-  twitter: /(?:twitter\.com|x\.com)\/([^/?]+)/i,
-  instagram: /instagram\.com\/([^/?]+)/i,
-  linkedin: /linkedin\.com\/(?:in|company)\/([^/?]+)/i,
-  github: /github\.com\/([^/?]+)/i,
-  dribbble: /dribbble\.com\/([^/?]+)/i,
-  behance: /behance\.net\/([^/?]+)/i,
-  medium: /medium\.com\/@?([^/?]+)/i,
-  youtube: /youtube\.com\/(?:channel\/|c\/|@|user\/)?([^/?]+)/i,
-  facebook: /facebook\.com\/([^/?]+)/i,
-  tiktok: /tiktok\.com\/@?([^/?]+)/i,
-};
+// Create platform patterns from SOCIAL_PLATFORMS
+const PLATFORM_PATTERNS: Record<string, RegExp> = {};
+const PLATFORM_NAMES: Record<string, string> = {};
 
-// Platform names for display
-const PLATFORM_NAMES = {
-  website: "Website",
-  twitter: "Twitter",
-  instagram: "Instagram",
-  linkedin: "LinkedIn",
-  github: "GitHub",
-  dribbble: "Dribbble",
-  behance: "Behance",
-  medium: "Medium",
-  youtube: "YouTube",
-  facebook: "Facebook",
-  tiktok: "TikTok",
-};
+// Build patterns and names from SOCIAL_PLATFORMS
+SOCIAL_PLATFORMS.forEach((platform) => {
+  PLATFORM_NAMES[platform.id] = platform.name;
+
+  // Create pattern from baseUrl if available
+  if (platform.baseUrl && platform.id !== "website") {
+    const domain = platform.baseUrl
+      .replace(/https?:\/\//, "")
+      .replace(/\/$/, "");
+    PLATFORM_PATTERNS[platform.id] = new RegExp(
+      `${domain.replace(".", "\\.")}\\/([^/?]+)`,
+      "i"
+    );
+  }
+
+  // Use existing pattern if provided
+  if (platform.pattern) {
+    PLATFORM_PATTERNS[platform.id] = platform.pattern;
+  }
+});
+
+// Add some additional patterns for common variations
+PLATFORM_PATTERNS.twitter = /(?:twitter\.com|x\.com)\/([^/?]+)/i;
+PLATFORM_PATTERNS.medium = /medium\.com\/@?([^/?]+)/i;
+PLATFORM_PATTERNS.facebook = /facebook\.com\/([^/?]+)/i;
+PLATFORM_PATTERNS.tiktok = /tiktok\.com\/@?([^/?]+)/i;
+
+// Add names for additional platforms
+PLATFORM_NAMES.twitter = "Twitter";
+PLATFORM_NAMES.medium = "Medium";
+PLATFORM_NAMES.facebook = "Facebook";
+PLATFORM_NAMES.tiktok = "TikTok";
 
 // Type for detected social media link
 type DetectedLink = {
@@ -95,7 +105,10 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
   // Process initial social links data from server
   useEffect(() => {
     if (initialData?.socialLinks) {
-      const socialLinks = { ...initialData.socialLinks };
+      const socialLinks = { ...initialData.socialLinks } as Record<
+        string,
+        string
+      >;
 
       // Website is handled by the form field
       if (socialLinks.website) {
@@ -103,16 +116,14 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
       }
 
       // Convert remaining social links to our detected links format
-      const links: DetectedLink[] = Object.entries(socialLinks).map(
-        ([platform, url]) => {
+      const links: DetectedLink[] = Object.entries(socialLinks)
+        .filter(([platform, url]: [string, string]) => url && url.trim())
+        .map(([platform, url]: [string, string]) => {
           let username = url;
 
           // Extract username from URL if it's a full URL
           if (url.includes("://")) {
-            const match =
-              PLATFORM_PATTERNS[
-                platform as keyof typeof PLATFORM_PATTERNS
-              ]?.exec(url);
+            const match = PLATFORM_PATTERNS[platform]?.exec(url);
             if (match && match[1]) {
               username = match[1];
             }
@@ -123,8 +134,7 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
             username,
             url,
           };
-        }
-      );
+        });
 
       setDetectedLinks(links);
 
@@ -151,7 +161,9 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
         const response = await getOnboardingStatusAction();
         if (response.success) {
           // Social links are now in creator.social_links, not profile.social_links
-          const socialLinks = response.data?.creator?.social_links;
+          const socialLinks = response.data?.creator?.social_links as
+            | Record<string, string>
+            | undefined;
 
           if (socialLinks) {
             // Extract website separately
@@ -161,16 +173,14 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
             }
 
             // Convert remaining social links to our detected links format
-            const links: DetectedLink[] = Object.entries(socialLinks).map(
-              ([platform, url]) => {
+            const links: DetectedLink[] = Object.entries(socialLinks)
+              .filter(([platform, url]: [string, string]) => url && url.trim())
+              .map(([platform, url]: [string, string]) => {
                 let username = url;
 
                 // Extract username from URL if it's a full URL
                 if (url.includes("://")) {
-                  const match =
-                    PLATFORM_PATTERNS[
-                      platform as keyof typeof PLATFORM_PATTERNS
-                    ]?.exec(url);
+                  const match = PLATFORM_PATTERNS[platform]?.exec(url);
                   if (match && match[1]) {
                     username = match[1];
                   }
@@ -181,8 +191,7 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
                   username,
                   url,
                 };
-              }
-            );
+              });
 
             setDetectedLinks(links);
 
@@ -214,7 +223,7 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
     // Compare as JSON to avoid unnecessary updates
     const currentLinksJSON = JSON.stringify(socialLinks);
     const prevLinksJSON = JSON.stringify(profileData?.social_links || {});
-    
+
     // Only update if actually changed
     if (currentLinksJSON !== prevLinksJSON) {
       updateProfileData({ social_links: socialLinks });
@@ -279,33 +288,26 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
         const updatedLinks = [...detectedLinks];
         updatedLinks[existingIndex] = detected;
         setDetectedLinks(updatedLinks);
-        toast({
-          title: "Updated link",
-          description: `Updated your ${PLATFORM_NAMES[detected.platform as keyof typeof PLATFORM_NAMES]} link.`,
-        });
+        toast.success(
+          `Updated your ${PLATFORM_NAMES[detected.platform]} link.`
+        );
       } else {
         // Add new link
         setDetectedLinks([...detectedLinks, detected]);
-        toast({
-          title: "Added link",
-          description: `Added your ${PLATFORM_NAMES[detected.platform as keyof typeof PLATFORM_NAMES]} link.`,
-        });
+        toast.success(`Added your ${PLATFORM_NAMES[detected.platform]} link.`);
       }
 
       setNewLink("");
     } else {
-      toast({
-        title: "Unknown platform",
-        description:
-          "We couldn't identify which social platform this link belongs to.",
-        variant: "destructive",
-      });
+      toast.error(
+        "We couldn't identify which social platform this link belongs to."
+      );
     }
   };
 
   // Remove a link - modified to use a callback pattern for state updates
   const removeLink = (index: number) => {
-    setDetectedLinks(prevLinks => prevLinks.filter((_, i) => i !== index));
+    setDetectedLinks((prevLinks) => prevLinks.filter((_, i) => i !== index));
   };
 
   // Handle form submission
@@ -313,10 +315,8 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
     // Check minimum links requirement (website counts as one)
     const totalLinks = detectedLinks.length + (values.website ? 1 : 0);
     if (totalLinks < 2) {
-      toast({
-        title: "Minimum links required",
+      toast.error("Minimum links required", {
         description: "Please add at least 2 social media links to continue.",
-        variant: "destructive",
       });
       return;
     }
@@ -342,8 +342,7 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
       });
 
       if (response.success) {
-        toast({
-          title: "Social links saved",
+        toast.success("Social links saved", {
           description: "Your social media links have been saved.",
         });
 
@@ -352,21 +351,15 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
 
         router.push("/onboarding/username_selection");
       } else {
-        toast({
-          title: "Error",
-          description:
-            response.error ||
-            "There was a problem saving your social links. Please try again.",
-          variant: "destructive",
-        });
+        toast.error(
+          response.error ||
+            "There was a problem saving your social links. Please try again."
+        );
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description:
-          "There was a problem saving your social links. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(
+        "There was a problem saving your social links. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -400,7 +393,10 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Website</FormLabel>
+                  <FormLabel className="flex items-center gap-2">
+                    <SocialIcon platform="website" className="h-4 w-4" />
+                    Website
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="example.com" {...field} />
                   </FormControl>
@@ -421,14 +417,18 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
                       key={index}
                       className="flex items-center justify-between p-3 bg-muted rounded-md"
                     >
-                      <div>
-                        <div className="font-medium">
-                          {PLATFORM_NAMES[
-                            link.platform as keyof typeof PLATFORM_NAMES
-                          ] || link.platform}
-                        </div>
-                        <div className="text-sm text-muted-foreground truncate max-w-[200px] md:max-w-[300px]">
-                          {link.username}
+                      <div className="flex items-center gap-3">
+                        <SocialIcon
+                          platform={link.platform}
+                          className="h-5 w-5"
+                        />
+                        <div>
+                          <div className="font-medium">
+                            {PLATFORM_NAMES[link.platform] || link.platform}
+                          </div>
+                          <div className="text-sm text-muted-foreground truncate max-w-[200px] md:max-w-[300px]">
+                            {link.username}
+                          </div>
                         </div>
                       </div>
                       <Button
@@ -464,8 +464,28 @@ export function SocialLinksForm({ initialData }: SocialLinksFormProps) {
                 </Button>
               </div>
               <FormDescription>
-                Paste your profile URL from Twitter, Instagram, LinkedIn, etc.
+                Paste your profile URL from{" "}
+                {SOCIAL_PLATFORMS.map((p) => p.name)
+                  .slice(0, 3)
+                  .join(", ")}
+                , etc.
               </FormDescription>
+            </div>
+
+            {/* Show supported platforms */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Supported Platforms</h4>
+              <div className="flex flex-wrap gap-2">
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <div
+                    key={platform.id}
+                    className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-full text-sm"
+                  >
+                    <SocialIcon platform={platform.id} className="h-3 w-3" />
+                    {platform.name}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </Card>

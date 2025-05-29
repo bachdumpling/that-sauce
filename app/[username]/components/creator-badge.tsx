@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import TiltedCard from "@/components/ui/tilted-card";
 import {
   Tooltip,
   TooltipContent,
@@ -11,10 +12,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const CreatorBadge = ({ creator }) => {
+interface CreatorBadgeProps {
+  creator: {
+    username?: string;
+    first_name?: string;
+    last_name?: string;
+    primary_role?: string[];
+    location?: string;
+    created_at?: string;
+  };
+}
+
+const CreatorBadge = ({ creator }: CreatorBadgeProps) => {
   const [selectedBadgeColor, setSelectedBadgeColor] = useState("black");
   const [isDownloading, setIsDownloading] = useState(false);
-  const badgeRef = useRef(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = useState(false);
 
   // Default values if creator info is incomplete
@@ -126,58 +138,58 @@ const CreatorBadge = ({ creator }) => {
           />
         </div>
 
-        {/* Badge with white border */}
+        {/* Badge with TiltedCard effect */}
         <div className="flex flex-col items-center justify-center gap-8">
-          <div className="bg-white rounded-2xl shadow-lg m-4">
-            <div
-              ref={badgeRef}
-              className="w-[320px] h-[437px] rounded-xl relative"
-            >
-              <Image
-                src={
-                  selectedBadgeColor === "black"
-                    ? "/badge-black-1.jpg"
-                    : "/badge-white-1.jpg"
-                }
-                alt={defaultValues.name}
-                width={1080}
-                height={1500}
-                className={`absolute top-0 left-0 w-full h-full object-cover rounded-xl z-0 ${
-                  selectedBadgeColor === "black"
-                    ? "outline outline-1 outline-gray-600"
-                    : "outline outline-1 outline-gray-600"
-                }`}
-              />
-              {/* Badge Content */}
-              <div
-                className={`absolute top-0 left-0 p-6 flex flex-col h-full w-full z-10 ${
-                  selectedBadgeColor === "black" ? "text-white" : "text-black"
-                }`}
-              >
-                <div className="absolute bottom-[32%] right-6">
-                  <div className="text-xs text-right">
-                    @{defaultValues.username}
+          <div className="rounded-2xl shadow-lg m-4">
+            <TiltedCard
+              imageSrc={
+                selectedBadgeColor === "black"
+                  ? "/badge-black-1.jpg"
+                  : "/badge-white-1.jpg"
+              }
+              altText={`${defaultValues.name} Badge`}
+              captionText="Your That Sauce badge"
+              containerHeight="437px"
+              containerWidth="320px"
+              imageHeight="437px"
+              imageWidth="320px"
+              scaleOnHover={1.1}
+              rotateAmplitude={14}
+              showMobileWarning={false}
+              showTooltip={true}
+              displayOverlayContent={true}
+              overlayContent={
+                <div
+                  className={`absolute top-0 left-0 p-6 flex flex-col h-full w-full z-10 ${
+                    selectedBadgeColor === "black" ? "text-white" : "text-black"
+                  }`}
+                >
+                  <div className="absolute bottom-[32%] right-6">
+                    <div className="text-xs text-right">
+                      @{defaultValues.username}
+                    </div>
                   </div>
-                </div>
 
-                {/* Creator info (positioned at bottom) */}
-                <div className="mt-auto space-y-4">
-                  <div className="flex flex-col gap-0">
-                    <h1 className="text-2xl font-medium leading-tight tracking-tight">
-                      {defaultValues.name}
-                    </h1>
-                    <h2 className="text-lg font-light leading-tight tracking-tight">
-                      {defaultValues.role}
-                    </h2>
-                  </div>
-                  <div className="w-full flex justify-between mt-2 text-[9px] opacity-80">
-                    <div>{defaultValues.location}</div>
-                    <div>{defaultValues.website}</div>
-                    <div>Joined: {defaultValues.joinedDate}</div>
+                  {/* Creator info (positioned at bottom) */}
+                  <div className="mt-auto space-y-4">
+                    <div className="flex flex-col gap-0">
+                      <h1 className="text-2xl font-medium leading-tight tracking-tight">
+                        {defaultValues.name}
+                      </h1>
+                      <h2 className="text-lg font-light leading-tight tracking-tight">
+                        {defaultValues.role}
+                      </h2>
+                    </div>
+                    <div className="w-full flex justify-between mt-2 text-[9px] opacity-80">
+                      <div>{defaultValues.location}</div>
+                      <div>{defaultValues.website}</div>
+                      <div>Joined: {defaultValues.joinedDate}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              }
+              className="group"
+            />
           </div>
 
           {/* Sharing & Embed Options */}
@@ -236,6 +248,56 @@ const CreatorBadge = ({ creator }) => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden element for download functionality */}
+      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
+        <div ref={badgeRef} className="w-[320px] h-[437px] rounded-xl relative">
+          <Image
+            src={
+              selectedBadgeColor === "black"
+                ? "/badge-black-1.jpg"
+                : "/badge-white-1.jpg"
+            }
+            alt={defaultValues.name}
+            width={1080}
+            height={1500}
+            className={`absolute top-0 left-0 w-full h-full object-cover rounded-xl z-0 ${
+              selectedBadgeColor === "black"
+                ? "outline outline-1 outline-gray-600"
+                : "outline outline-1 outline-gray-600"
+            }`}
+          />
+          {/* Badge Content */}
+          <div
+            className={`absolute top-0 left-0 p-6 flex flex-col h-full w-full z-10 ${
+              selectedBadgeColor === "black" ? "text-white" : "text-black"
+            }`}
+          >
+            <div className="absolute bottom-[32%] right-6">
+              <div className="text-xs text-right">
+                @{defaultValues.username}
+              </div>
+            </div>
+
+            {/* Creator info (positioned at bottom) */}
+            <div className="mt-auto space-y-4">
+              <div className="flex flex-col gap-0">
+                <h1 className="text-2xl font-medium leading-tight tracking-tight">
+                  {defaultValues.name}
+                </h1>
+                <h2 className="text-lg font-light leading-tight tracking-tight">
+                  {defaultValues.role}
+                </h2>
+              </div>
+              <div className="w-full flex justify-between mt-2 text-[9px] opacity-80">
+                <div>{defaultValues.location}</div>
+                <div>{defaultValues.website}</div>
+                <div>Joined: {defaultValues.joinedDate}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

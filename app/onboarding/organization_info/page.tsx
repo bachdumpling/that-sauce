@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getOnboardingStatusAction } from "@/actions/onboarding-actions";
 import { OrganizationForm } from "./organization-form";
+import { OnboardingContainer } from "../components/onboarding-container";
 
 export const metadata = {
   title: "Organization Information | Onboarding",
@@ -42,19 +43,11 @@ export default async function OrganizationInfoPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Organization Information
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Tell us about your organization
-          </p>
-        </div>
-
-        <OrganizationForm initialData={initialData} />
-      </div>
-    </div>
+    <OnboardingContainer
+      title="Organization Information"
+      description="Tell us about your organization or choose to hire as an individual"
+    >
+      <OrganizationForm initialData={initialData} />
+    </OnboardingContainer>
   );
 }

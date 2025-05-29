@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getOnboardingStatusAction } from "@/actions/onboarding-actions";
 import { SocialLinksForm } from "./social-links-form";
+import { OnboardingContainer } from "../components/onboarding-container";
 
 export const metadata = {
   title: "Social Media Links | Onboarding",
@@ -39,19 +40,11 @@ export default async function SocialLinksPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Social Media Links
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Connect your social accounts
-          </p>
-        </div>
-
-        <SocialLinksForm initialData={initialData} />
-      </div>
-    </div>
+    <OnboardingContainer
+      title="Social Media Links"
+      description="Connect your social accounts to showcase your work"
+    >
+      <SocialLinksForm initialData={initialData} />
+    </OnboardingContainer>
   );
 }

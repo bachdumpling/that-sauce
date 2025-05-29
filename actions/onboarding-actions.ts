@@ -7,6 +7,7 @@ import {
   ProfileData,
   OrganizationData,
   SocialLinks,
+  OrganizationChoice,
 } from "@/types/onboarding";
 
 /**
@@ -252,6 +253,152 @@ export async function setOrganizationInfoAction(orgData: OrganizationData) {
         error instanceof Error
           ? error.message
           : "Failed to set organization info",
+      data: null,
+    };
+  }
+}
+
+/**
+ * Server action to set organization choice for employers
+ */
+export async function setOrganizationChoiceAction(choice: OrganizationChoice) {
+  try {
+    const supabase = await createClient();
+
+    // Get authenticated user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return {
+        success: false,
+        error: "Authentication required",
+        data: null,
+      };
+    }
+
+    // Check if user role is employer
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      return {
+        success: false,
+        error: "Failed to fetch user profile",
+        data: null,
+      };
+    }
+
+    if (profileData.user_role !== "employer") {
+      return {
+        success: false,
+        error: "Only employers can set organization information",
+        data: null,
+      };
+    }
+
+    let orgId: string | null = null;
+
+    switch (choice.type) {
+      case "existing":
+        if (!choice.organization_id) {
+          return {
+            success: false,
+            error: "Organization ID is required for existing organization",
+            data: null,
+          };
+        }
+        orgId = choice.organization_id;
+        break;
+
+      case "new":
+        if (!choice.organization_data) {
+          return {
+            success: false,
+            error: "Organization data is required for new organization",
+            data: null,
+          };
+        }
+
+        // Create new organization
+        const { data: newOrg, error: createOrgError } = await supabase
+          .from("organizations")
+          .insert({
+            name: choice.organization_data.name,
+            website: choice.organization_data.website,
+            logo_url: choice.organization_data.logo_url,
+          })
+          .select()
+          .single();
+
+        if (createOrgError) {
+          console.error("Error creating organization:", createOrgError);
+          return {
+            success: false,
+            error: "Failed to create organization",
+            data: null,
+          };
+        }
+
+        orgId = newOrg.id;
+        break;
+
+      case "individual":
+        orgId = null; // Hiring as individual
+        break;
+
+      default:
+        return {
+          success: false,
+          error: "Invalid organization choice type",
+          data: null,
+        };
+    }
+
+    // Update user profile with the organization choice and move to step 3
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({
+        organization_id: orgId,
+        onboarding_step: 3, // Move to step 3
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error setting organization choice:", error);
+      return {
+        success: false,
+        error: "Failed to set organization choice",
+        data: null,
+      };
+    }
+
+    revalidatePath("/onboarding");
+    return {
+      success: true,
+      message: "Organization choice set successfully",
+      data: {
+        profile: data,
+        organization_id: orgId,
+        choice_type: choice.type,
+      },
+    };
+  } catch (error) {
+    console.error("Error setting organization choice:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to set organization choice",
       data: null,
     };
   }

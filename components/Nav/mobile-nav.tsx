@@ -17,13 +17,14 @@ import { ThemeSwitcher } from "./theme-switcher";
 import { usePathname } from "next/navigation";
 import { adminRoutes } from "./routes";
 import { createClient } from "@/utils/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const [user, setUser] = useState(null);
-  const [creatorUsername, setCreatorUsername] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -37,10 +38,10 @@ export function MobileNav() {
         setUser(user);
 
         if (user) {
-          // Get creator username
+          // Get creator username and avatar
           const { data: creator } = await supabase
             .from("creators")
-            .select("username")
+            .select("username, avatar_url")
             .eq("profile_id", user.id)
             .single();
 
@@ -63,6 +64,14 @@ export function MobileNav() {
               last_name: "",
               avatar_url: user.user_metadata?.avatar_url || "",
             });
+          }
+
+          // Prioritize creator avatar over profile avatar
+          if (creator?.avatar_url) {
+            setProfile((prev: any) => ({
+              ...prev,
+              avatar_url: creator.avatar_url,
+            }));
           }
         }
       } catch (error) {
@@ -108,9 +117,9 @@ export function MobileNav() {
         </SheetHeader>
 
         <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-4 bg-accent/20 p-4 rounded-lg">
+          <div className="flex flex-col gap-4 bg-muted p-4 rounded-lg">
             {isLoading ? (
-              <div className="h-9 w-full bg-muted animate-pulse rounded-md"></div>
+              <div className="h-9 w-full bg-accent animate-pulse rounded-md"></div>
             ) : (
               <NavClient
                 initialUser={user}

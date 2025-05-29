@@ -11,15 +11,18 @@ export async function Nav() {
   // Get creator profile if it exists
   let creatorUsername = null;
   let profile = null;
+  let creatorAvatar = null;
+
   if (user) {
     const { data: creator } = await supabase
       .from("creators")
-      .select("username")
+      .select("username, avatar_url")
       .eq("profile_id", user.id)
       .single();
 
     if (creator) {
       creatorUsername = creator.username;
+      creatorAvatar = creator.avatar_url;
     }
 
     // Get user profile information
@@ -36,6 +39,14 @@ export async function Nav() {
         first_name: user.user_metadata.name || "",
         last_name: "",
         avatar_url: user.user_metadata.avatar_url || "",
+      };
+    }
+
+    // Prioritize creator avatar over profile avatar
+    if (creatorAvatar) {
+      profile = {
+        ...profile,
+        avatar_url: creatorAvatar,
       };
     }
   }

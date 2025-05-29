@@ -1,32 +1,11 @@
 "use client";
 
-import { Creator, Project } from "@/components/shared/types";
+import { Creator } from "@/types";
 import { Overview } from "./overview";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  ImageIcon,
-  Plus,
-  Instagram,
-  Mail,
-  Briefcase,
-  MapPin,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { Toaster } from "@/components/ui/sonner";
-import { toast } from "sonner";
-import { MultiSelect, Option } from "@/components/ui/multi-select";
-import {
-  CREATOR_ROLES,
-  SOCIAL_PLATFORMS,
-} from "@/lib/constants/creator-options";
-
-// Role options for the MultiSelect component
-const ROLE_OPTIONS: Option[] = CREATOR_ROLES.map((role) => ({
-  value: role,
-  label: role,
-}));
+import { ImageIcon, Plus } from "lucide-react";
 
 interface CreatorClientProps {
   creator: Creator;
@@ -53,55 +32,81 @@ export function CreatorClient({ creator, username }: CreatorClientProps) {
 
       {activeTab === "work" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="group hover:opacity-90 transition-opacity">
-            <div className="overflow-hidden">
-              <div className="w-full h-72 object-cover rounded-[16px] border border-gray-200 grid place-items-center">
-                <Button
-                  variant="outline"
-                  className="flex flex-col items-center justify-center rounded-full p-2"
-                >
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                </Button>
-              </div>
-            </div>
-          </div>
           {creator.projects && creator.projects.length > 0 ? (
-            creator.projects.map((project) => (
-              <Link
-                href={`/${username}/work/${project.id}`}
-                key={project.id}
-                className="group hover:opacity-90 transition-opacity"
-              >
-                <div className="overflow-hidden">
-                  {project.images && project.images.length > 0 ? (
-                    <img
-                      src={project.images[0].url}
-                      alt={project.title}
-                      className="w-full h-72 object-cover rounded-[16px] border border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-full h-72 bg-muted flex items-center justify-center">
-                      <ImageIcon className="h-12 w-12 text-muted-foreground" />
+            <>
+              {creator.isOwner && (
+                <div className="group hover:opacity-90 transition-opacity">
+                  <div className="overflow-hidden">
+                    <div className="w-full h-72 object-cover rounded-[16px] border border-gray-200 grid place-items-center bg-muted/50 hover:bg-muted/70 transition-colors">
+                      <Link
+                        href="/project/new"
+                        className="flex flex-col items-center justify-center space-y-2"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Plus className="h-6 w-6 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Add Project
+                        </span>
+                      </Link>
                     </div>
-                  )}
-                  <div className="pt-4">
-                    <h3 className="font-medium text-lg">{project.title}</h3>
-                    {project.description && (
-                      <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
-                        {project.description}
-                      </p>
-                    )}
                   </div>
                 </div>
-              </Link>
-            ))
+              )}
+              {creator.projects.map((project) => (
+                <Link
+                  href={`/${username}/work/${project.id}`}
+                  key={project.id}
+                  className="group hover:opacity-90 transition-opacity"
+                >
+                  <div className="overflow-hidden">
+                    {project.images && project.images.length > 0 ? (
+                      <img
+                        src={project.images[0].url}
+                        alt={project.title}
+                        className="w-full h-72 object-cover rounded-[16px] border border-gray-200"
+                      />
+                    ) : (
+                      <div className="w-full h-72 bg-muted flex items-center justify-center rounded-[16px] border border-gray-200">
+                        <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="pt-4">
+                      <h3 className="font-medium text-lg">{project.title}</h3>
+                      {project.description && (
+                        <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+                          {project.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </>
           ) : (
-            <div className="col-span-3 py-12 text-center">
-              <h3 className="text-lg font-medium text-muted-foreground">
-                No projects yet
-              </h3>
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 space-y-6">
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-semibold text-foreground">
+                  {creator.isOwner
+                    ? "Ready to showcase your work?"
+                    : "No projects yet"}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {creator.isOwner
+                    ? "Start building your portfolio by adding your first project. Show the world what you can create."
+                    : `${creator.first_name || creator.username} hasn't shared any projects yet.`}
+                </p>
+              </div>
               {creator.isOwner && (
-                <Button className="mt-4">Add Your First Project</Button>
+                <Button asChild size="lg" className="mt-4">
+                  <Link href="/project/new">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Project
+                  </Link>
+                </Button>
               )}
             </div>
           )}
@@ -121,24 +126,6 @@ export function CreatorClient({ creator, username }: CreatorClientProps) {
             <div className="mt-6">
               <h3>Location</h3>
               <p>{creator.location}</p>
-            </div>
-          )}
-
-          {creator.website && (
-            <div className="mt-6">
-              <h3>Website</h3>
-              <a
-                href={
-                  creator.website.startsWith("http")
-                    ? creator.website
-                    : `https://${creator.website}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                {creator.website}
-              </a>
             </div>
           )}
         </div>

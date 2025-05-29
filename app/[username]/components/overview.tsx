@@ -51,7 +51,7 @@ export function Overview({ creator }: OverviewProps) {
   return (
     <div className="w-full space-y-8">
       {/* Projects Masonry Grid */}
-      {creator.projects && creator.projects.length > 0 && (
+      {creator.projects && creator.projects.length > 0 ? (
         <div className="mt-8">
           <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
             {creator.projects.map((project) => {
@@ -100,7 +100,7 @@ export function Overview({ creator }: OverviewProps) {
                     ))
                   ) : (
                     // Fallback if no images are available
-                    <div className="flex items-center justify-center h-48 bg-gray-200">
+                    <div className="flex items-center justify-center h-48 bg-gray-200 rounded-lg">
                       <ImageIcon className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
@@ -108,6 +108,32 @@ export function Overview({ creator }: OverviewProps) {
               );
             })}
           </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-20 space-y-6">
+          <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+            <ImageIcon className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-2xl font-semibold text-foreground">
+              {creator.isOwner
+                ? "Welcome to your portfolio!"
+                : "No work to show yet"}
+            </h3>
+            <p className="text-muted-foreground max-w-lg">
+              {creator.isOwner
+                ? "This is where your creative work will shine. Start by adding your first project to build an amazing portfolio."
+                : `${creator.first_name || creator.username} is working on some amazing projects. Check back soon!`}
+            </p>
+          </div>
+          {creator.isOwner && (
+            <Button asChild size="lg" className="mt-4">
+              <Link href="/project/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Project
+              </Link>
+            </Button>
+          )}
         </div>
       )}
     </div>

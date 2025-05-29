@@ -18,6 +18,7 @@ import {
   mainRoutes,
   userAuthRoutes,
   adminRoutes,
+  creatorRoutes,
   isAdminEmail,
 } from "./routes";
 import { EditProfileButton } from "@/components/shared/edit-profile-button";
@@ -51,9 +52,32 @@ export function NavClient({
   if (layout === "mobile") {
     return initialUser ? (
       <div className="flex flex-col gap-2 w-full">
-        <span className="text-sm text-center py-2">
-          Hey, {profile?.first_name || initialUser.email}!
-        </span>
+        {/* User Info Section */}
+        <div className="flex items-center gap-3 py-2 px-2 bg-muted rounded-lg">
+          <Avatar className="w-10 h-10 border-2 border-border">
+            <AvatarImage src={profile?.avatar_url || undefined} />
+            <AvatarFallback className="text-sm font-medium">
+              {profile?.first_name?.charAt(0) ||
+                initialUser.user_metadata?.name?.charAt(0) ||
+                initialUser.email?.charAt(0) ||
+                "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">
+              Hey,{" "}
+              {profile?.first_name ||
+                initialUser.user_metadata?.name ||
+                "there"}
+              !
+            </span>
+            {creatorUsername && (
+              <span className="text-xs text-muted-foreground">
+                @{creatorUsername}
+              </span>
+            )}
+          </div>
+        </div>
 
         {creatorUsername && (
           <Button
@@ -61,13 +85,13 @@ export function NavClient({
             variant="outline"
             className="w-full justify-center py-2"
           >
-            <Link href={`/${creatorUsername}`}>Your Profile</Link>
+            <Link href={`/${creatorUsername}`}>Portfolio</Link>
           </Button>
         )}
 
         <EditProfileButton
           className="w-full justify-center py-2"
-          username={creatorUsername}
+          username={creatorUsername || undefined}
         >
           <span>Edit Profile</span>
         </EditProfileButton>
@@ -153,6 +177,18 @@ export function NavClient({
             <Link href={route.path}>{route.label}</Link>
           </Button>
         ))}
+
+        {/* Portfolio route for creators */}
+        {creatorUsername && (
+          <Button
+            asChild
+            size="sm"
+            variant="ghost"
+            className="p-4 rounded-full"
+          >
+            <Link href={`/${creatorUsername}`}>Portfolio</Link>
+          </Button>
+        )}
       </div>
 
       {/* Middle */}
@@ -175,38 +211,41 @@ export function NavClient({
           </Button>
         )}
 
-        {/* Profile Avatar */}
-        {creatorUsername && (
-          <Link href={`/${creatorUsername}`}>
-            <Avatar className="">
-              <AvatarImage src={profile?.avatar_url} />
-              <AvatarFallback>
-                {profile?.first_name?.charAt(0) || initialUser.email?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
-        )}
-
         {/* User Menu Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <div
-              className="flex items-center cursor-pointer hover:text-primary transition-all duration-300 hover:bg-muted hover:rounded-full p-2"
+              className="flex items-center cursor-pointer hover:bg-muted hover:rounded-full p-2 transition-all duration-300"
               data-testid="user-menu"
             >
-              <ChevronDownIcon className="w-4 h-4" />
+              <Avatar className="">
+                <AvatarImage
+                  className="object-cover"
+                  src={profile?.avatar_url || undefined}
+                />
+                <AvatarFallback className="text-xs font-medium">
+                  {profile?.first_name?.charAt(0) ||
+                    initialUser.user_metadata?.name?.charAt(0) ||
+                    initialUser.email?.charAt(0) ||
+                    "U"}
+                </AvatarFallback>
+              </Avatar>
+              <ChevronDownIcon className="w-3 h-3 ml-1" />
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="rounded-[16px] p-2 mt-4 border-none bg-zinc-200 dark:bg-zinc-800 flex flex-col gap-2 w-60"
+            className="rounded-2xl p-2 mt-4 border-none bg-card flex flex-col gap-2 w-60"
             align="end"
           >
-            <DropdownMenuGroup className="flex flex-col gap-4 bg-zinc-50 dark:bg-zinc-700 px-2 py-4 rounded-[16px]">
+            <DropdownMenuGroup className="flex flex-col gap-4 bg-muted px-2 py-4 rounded-2xl">
               {/* avatar */}
               <div className="flex flex-col gap-4 mb-4">
                 <div className="flex justify-center items-center">
                   <Avatar className="w-16 h-16 border">
-                    <AvatarImage src={profile?.avatar_url} />
+                    <AvatarImage
+                      className="object-cover"
+                      src={profile?.avatar_url || undefined}
+                    />
                     <AvatarFallback>
                       {profile?.first_name?.charAt(0) ||
                         initialUser.user_metadata?.name?.charAt(0) ||
@@ -216,29 +255,34 @@ export function NavClient({
                   </Avatar>
                 </div>
 
-                {/* name */}
                 <div>
-                  <p className="font-medium text-xl text-center">
+                  {/* name */}
+                  <p className="font-medium text-lg text-center">
                     {profile?.first_name ||
                       initialUser.user_metadata?.name ||
                       creatorUsername}{" "}
                     {profile?.last_name || ""}
                   </p>
+                  {creatorUsername && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      @{creatorUsername}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {profile && (
-                <DropdownMenuItem className="focus:bg-zinc-200 dark:focus:bg-zinc-600 rounded-[16px] p-4">
+                <DropdownMenuItem className="focus:bg-accent rounded-2xl p-4">
                   <EditProfileButton
                     className="w-full flex justify-start p-0 h-auto"
-                    username={creatorUsername}
+                    username={creatorUsername || undefined}
                   >
                     <span className="text-sm font-medium">Edit Profile</span>
                   </EditProfileButton>
                 </DropdownMenuItem>
               )}
 
-              <DropdownMenuItem className="focus:bg-zinc-200 dark:focus:bg-zinc-600 rounded-[16px] p-4">
+              <DropdownMenuItem className="focus:bg-accent rounded-2xl p-4">
                 <button
                   onClick={handleSignOut}
                   className="w-full cursor-pointer text-sm font-medium text-left"
@@ -247,7 +291,7 @@ export function NavClient({
                 </button>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuGroup className="flex flex-col gap-4 bg-zinc-50 dark:bg-zinc-700 px-2 py-4 rounded-[16px]">
+            <DropdownMenuGroup className="flex flex-col gap-4 bg-muted px-2 py-4 rounded-2xl">
               <div className="px-4 flex justify-between items-center">
                 <p className="text-sm font-medium">Theme</p>
                 <ThemeSwitcher />

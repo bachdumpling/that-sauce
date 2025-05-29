@@ -152,7 +152,13 @@ export function ProfileInfo({
               <Pencil className="h-4 w-4 mr-2 mb-1" />
               Edit profile
             </Button>
-            <Button variant="outline" className="p-6 rounded-full">
+            <Button
+              variant="outline"
+              className="p-6 rounded-full"
+              onClick={() => {
+                openProfileDialog(username, "share");
+              }}
+            >
               <Share className="h-4 w-4 mr-2 mb-1" />
               Share profile
             </Button>

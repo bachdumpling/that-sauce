@@ -100,3 +100,30 @@ export interface SocialLinks {
   youtube?: string;
   [key: string]: string | undefined;
 }
+
+/**
+ * Organization choice type for onboarding
+ */
+export type OrganizationChoiceType = "existing" | "new" | "individual";
+
+/**
+ * Organization choice for employer onboarding
+ */
+export interface OrganizationChoice {
+  type: OrganizationChoiceType;
+  organization_id?: string;
+  organization_data?: OrganizationData;
+}
+
+/**
+ * Form values for organization selection
+ */
+export interface OrganizationFormData {
+  choice_type: OrganizationChoiceType;
+  selected_organization_id?: string;
+  new_organization?: {
+    name: string;
+    website?: string;
+    logo_url?: string;
+  };
+}

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getOnboardingStatusAction } from "@/actions/onboarding-actions";
 import { ProfileForm } from "./profile-form";
+import { OnboardingContainer } from "../components/onboarding-container";
 
 export const metadata = {
   title: "Profile Information | Onboarding",
@@ -33,34 +34,30 @@ export default async function ProfileInfoPage() {
 
   // Extract profile data from response
   const { profile, creator } = onboardingStatus;
-  
+
   // Prepare initial form data
   const initialData = {
     profileData: {
       first_name: profile?.first_name || "",
       last_name: profile?.last_name || "",
     },
-    creatorData: creator ? {
-      bio: creator.bio || "",
-      location: creator.location || "",
-      primary_role: creator.primary_role || [],
-      avatar_url: creator.avatar_url || "",
-    } : null,
-    userRole
+    creatorData: creator
+      ? {
+          bio: creator.bio || "",
+          location: creator.location || "",
+          primary_role: creator.primary_role || [],
+          avatar_url: creator.avatar_url || "",
+        }
+      : null,
+    userRole,
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Build your profile
-          </h1>
-          <p className="text-muted-foreground mt-2">Tell us about yourself</p>
-        </div>
-
-        <ProfileForm initialData={initialData} />
-      </div>
-    </div>
+    <OnboardingContainer
+      title="Build your profile"
+      description="Tell us about yourself and your creative work"
+    >
+      <ProfileForm initialData={initialData} />
+    </OnboardingContainer>
   );
 }

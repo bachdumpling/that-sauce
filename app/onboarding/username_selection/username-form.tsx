@@ -25,8 +25,8 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
   const router = useRouter();
   const [usernameData, setUsernameData] = useState<UsernameFormData>({
     username: initialData?.username || "",
-    isValid: false,
-    isAvailable: false,
+    isValid: !!initialData?.username,
+    isAvailable: !!initialData?.username,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dataInitialized, setDataInitialized] = useState(
@@ -58,10 +58,11 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
         // Username is now in creator.username, not profile.username
         if (response.success && response.data?.creator?.username) {
           const fetchedUsername = response.data.creator.username;
-          setUsernameData((prev) => ({
-            ...prev,
+          setUsernameData({
             username: fetchedUsername,
-          }));
+            isValid: true,
+            isAvailable: true,
+          });
           updateProfileData({ username: fetchedUsername });
           setDataInitialized(true);
         }
@@ -86,9 +87,7 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
   }, []);
 
   // Submit the form
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!usernameData.isValid || !usernameData.isAvailable) {
       toast.error("Please provide a valid and available username.");
       return;
@@ -126,7 +125,7 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <UsernameInput
         initialUsername={initialData?.username || ""}
         currentUsername={initialData?.username || ""}
@@ -136,12 +135,12 @@ export function UsernameForm({ initialData }: UsernameFormProps) {
 
       <OnboardingNavigation
         currentStep="username_selection"
-        userRole={initialData?.userRole || null}
+        userRole={initialData?.userRole}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         isNextDisabled={!usernameData.isValid || !usernameData.isAvailable}
         nextButtonText="Continue"
       />
-    </form>
+    </div>
   );
 }

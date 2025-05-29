@@ -39,8 +39,9 @@ export default async function OnboardingLayout({
             priority
           />
           <div className="grid grid-cols-2 h-full">
-            <div className="p-8 flex flex-col justify-center items-center">
-              {children}
+            {/* Fixed-width content area */}
+            <div className="flex flex-col justify-center items-center p-8 overflow-y-auto">
+              <div className="w-full max-w-2xl">{children}</div>
             </div>
             {/* This div has a designated slot for the preview component */}
             <div className="relative overflow-hidden bg-that-sauce-black m-6 rounded-[16px] shadow-lg preview-container" />

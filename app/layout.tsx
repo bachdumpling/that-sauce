@@ -1,8 +1,4 @@
-import HeaderAuth from "@/components/header-auth";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ThemeProvider } from "next-themes";
-import Link from "next/link";
-import Image from "next/image";
 import "./globals.css";
 import "@/styles/nprogress-custom.css";
 import { Analytics } from "@vercel/analytics/react";
@@ -12,6 +8,8 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { ProgressBarProvider } from "@/providers/ProgressBarProvider";
 import { Nav } from "@/components/Nav/nav";
 import { ProfileEditProvider } from "@/contexts/ProfileEditContext";
+import { Footer } from "@/components/Footer";
+
 const defaultUrl = process.env.NEXT_PUBLIC_CLIENT_URL
   ? `https://${process.env.NEXT_PUBLIC_CLIENT_URL}`
   : "https://localhost:3000";
@@ -117,15 +115,7 @@ export default function RootLayout({
 
                 <main className="flex-1 w-full mx-auto px-8">{children}</main>
 
-                <footer className="w-full flex flex-col items-center justify-center border-t mx-auto text-center text-xs py-16">
-                  <Image
-                    src="/logo.png"
-                    alt="that sauce"
-                    width={100}
-                    height={100}
-                  />
-                  <p>that sauce 2025</p>
-                </footer>
+                <Footer />
               </div>
             </main>
             <Analytics />

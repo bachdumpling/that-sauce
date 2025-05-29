@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getOnboardingStatusAction } from "@/actions/onboarding-actions";
 import { UsernameForm } from "./username-form";
+import { OnboardingContainer } from "../components/onboarding-container";
 
 export const metadata = {
   title: "Choose Your Username | Onboarding",
@@ -52,19 +53,11 @@ export default async function UsernameSelectionPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Choose Your Username
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Pick a unique username for your profile
-          </p>
-        </div>
-
-        <UsernameForm initialData={initialData} />
-      </div>
-    </div>
+    <OnboardingContainer
+      title="Choose Your Username"
+      description="Pick a unique username for your creative profile"
+    >
+      <UsernameForm initialData={initialData} />
+    </OnboardingContainer>
   );
 }
