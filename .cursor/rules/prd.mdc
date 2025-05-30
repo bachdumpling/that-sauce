@@ -3,573 +3,462 @@ description:
 globs: 
 alwaysApply: true
 ---
-# That Sauce Brand Guidelines - Cursor Rules
+# That Sauce - Product Requirements Document (Updated with Sanity CMS)
 
-## Brand Overview
-You are developing UI for "That Sauce" - a creative talent search engine that helps producers and creative directors find artists, filmmakers, directors, and other creative professionals. The brand is inspired by slang referring to something with great taste, beauty, and craftsmanship, blending the real sauce with the artistic world.
+## 1. Product Overview
 
-## Core Brand Values
-- Great taste, beauty, and craftsmanship
-- NYC street art and culture inspiration
-- Connecting creative professionals
-- Modern, expressive, and bold design
+**Product Name:** That Sauce  
+**Tagline:** "Find Your Sauce" - Creative Talent Search Engine  
+**Mission:** Connect producers and creative directors with top-tier creative professionals through AI-powered search and rich content management.
 
-## Visual Identity Guidelines
+### Core Value Proposition
+- **For Talent Seekers:** Discover and connect with creative professionals through intelligent search, curated content, and rich portfolio experiences
+- **For Creatives:** Showcase work through dynamic portfolios, benefit from content marketing, and connect with potential clients
+- **For Content Teams:** Manage and curate creative content, success stories, and platform marketing through powerful CMS tools
 
-### Logo Usage
-- **Primary Logo**: Hot sauce bottle with "THAT SAUCE" text and yellow star
-- **Icon Only**: Use small bottle without name for compact spaces
-- **Wordmark Options**:
-  - Option 1: "THAT SAUCE" stacked with star replacing "T"
-  - Option 2: "THAT★SAUCE" inline with star replacing "T"
-- **Responsive Sizing**: Use full logo for larger formats, simplify to bottle icon for smaller applications
+## 2. Architecture Overview
 
-### Logo Don'ts
-- ❌ Never use small bottle with brand name
-- ❌ Never use small bottle and wordmark together  
-- ❌ Never rotate the bottle
-- ❌ Never change logo colors
-- ❌ Never use small bottle and wordmark combination
+### Hybrid Database Strategy
+The platform utilizes a **dual-database architecture** optimizing for different use cases:
 
-### Color Palette
-```css
-/* Primary Colors */
---black-sauce: #000000;        /* Primary brand black */
---off-white-sauce: #ffffff;    /* Clean white background */
---yellow-sauce: #ff9d00;       /* Brand yellow/orange - star color */
---spicy-red-sauce: #e21313;    /* Hot sauce red */
---green-sauce: #1fe55c;        /* Bottle cap green */
+#### Supabase (Operational Database)
+- **User management & authentication**
+- **Creator profiles & portfolios** 
+- **Project data & media storage**
+- **Search analytics & history**
+- **Real-time features & notifications**
+- **Transactional data**
 
-/* Usage Guidelines */
-/* Black: Primary text, backgrounds, high contrast elements */
-/* Off-white: Clean backgrounds, contrast areas */
-/* Yellow: Star element, accent highlights, CTAs */
-/* Spicy Red: Bottle color, primary brand element */
-/* Green: Bottle cap, secondary accents */
+#### Sanity CMS (Content Management)
+- **Marketing pages & landing pages**
+- **Blog posts & articles**
+- **Case studies & success stories** 
+- **Platform announcements**
+- **Resource libraries & guides**
+- **Brand assets & media galleries**
+- **SEO metadata & structured content**
+
+### Content Strategy Integration
+- **Supabase** handles dynamic, user-generated portfolio content
+- **Sanity** manages editorial content, marketing materials, and platform communications
+- **Cross-references** between Sanity content and Supabase creator profiles for featured stories
+
+## 3. Updated Technical Stack
+
+### Backend Services
+- **Next.js 14** (App Router, Server Actions)
+- **Supabase** (PostgreSQL, Auth, Storage, Real-time)
+- **Sanity Studio** (Headless CMS)
+- **Trigger.dev** (Background Jobs & AI Processing)
+- **Google Gemini API** (AI Analysis & Search Enhancement)
+
+### Frontend
+- **React 19** with TypeScript
+- **Tailwind CSS** + **shadcn/ui**
+- **Sanity/next** for content rendering
+- **Portable Text** for rich content blocks
+
+### Content Architecture
+```
+Content Sources:
+├── Supabase (User Data)
+│   ├── Creators & Portfolios
+│   ├── Projects & Media
+│   ├── Search & Analytics
+│   └── User Interactions
+└── Sanity CMS (Editorial Content)
+    ├── Marketing Pages
+    ├── Blog & Articles  
+    ├── Case Studies
+    ├── Resource Library
+    └── Brand Assets
 ```
 
-### Typography
+## 4. Enhanced Feature Set
 
-#### Primary Font - Custom "Sauce" Font
-```css
-/* For headlines, titles, and key informational words */
-/* Handwritten, expressive, textured appearance */
-/* Use for: Headlines, brand messaging, key CTAs */
-font-family: 'Sauce', sans-serif; /* Custom handwritten font */
-font-weight: normal;
-text-transform: uppercase; /* Often used in caps */
-```
+### 4.1 Core Platform Features (Supabase-powered)
+- **AI-Powered Search** - Intelligent creator and project discovery
+- **Dynamic Portfolios** - Creator-managed project showcases
+- **Profile Management** - User authentication and profile customization
+- **Analytics Dashboard** - Search insights and portfolio performance
+- **Collaboration Tools** - Project matching and communication
 
-#### Secondary Font - Helvetica Neue
-```css
-/* For longer texts, body copy, detailed information */
-/* Clean, readable, professional */
-/* Use for: Body text, captions, detailed info, UI elements */
-font-family: 'Helvetica Neue', Arial, sans-serif;
-font-weight: 400; /* Regular */
-```
+### 4.2 Content Management Features (Sanity-powered)
 
-#### Font Hierarchy
-```css
-/* Hero Headlines */
-.hero-headline {
-  font-family: 'Sauce', sans-serif;
-  font-size: clamp(3rem, 8vw, 8rem);
-  text-transform: uppercase;
-  line-height: 0.9;
-}
-
-/* Section Headers */
-.section-header {
-  font-family: 'Sauce', sans-serif;
-  font-size: clamp(2rem, 5vw, 4rem);
-  text-transform: uppercase;
-}
-
-/* Body Text */
-.body-text {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-/* UI Labels */
-.ui-label {
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-```
-
-### Graphic System & Layout
-
-#### NYC Borough Typography Treatment
-- Use NYC borough names as graphic elements: "STATEN ISLAND", "THE BRONX", "QUEENS", "BROOKLYN", "MANHATTAN", "NEW YORK"
-- Apply custom Sauce font styling
-- Integrate with bottle imagery
-- Use as background elements or section dividers
-
-#### Visual Elements
-```css
-/* Star Element - Key Brand Symbol */
-.brand-star {
-  color: var(--yellow-sauce);
-  font-size: 1.2em; /* Relative to context */
-  /* Use ★ character or custom star icon */
-}
-
-/* Bottle Integration */
-/* Always include bottle imagery in key brand moments */
-/* Use as hero elements, section breaks, or subtle background elements */
-```
-
-## UI Development Guidelines
-
-### Component Styling
-
-#### Buttons
-```css
-/* Primary CTA Button */
-.btn-primary {
-  background-color: var(--black-sauce);
-  color: var(--off-white-sauce);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 0; /* Sharp corners align with brand aesthetic */
-  transition: all 0.2s ease;
-}
-
-.btn-primary:hover {
-  background-color: var(--spicy-red-sauce);
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background-color: transparent;
-  color: var(--black-sauce);
-  border: 2px solid var(--black-sauce);
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Star Accent Button */
-.btn-star {
-  position: relative;
-}
-
-.btn-star::after {
-  content: '★';
-  color: var(--yellow-sauce);
-  margin-left: 0.5rem;
-}
-```
-
-#### Search Interface
-```css
-/* Main Search Bar */
-.search-hero {
-  font-family: 'Sauce', sans-serif;
-  font-size: clamp(1.5rem, 4vw, 3rem);
-  background: transparent;
-  border: none;
-  border-bottom: 3px solid var(--black-sauce);
-  text-transform: uppercase;
-  outline: none;
-}
-
-.search-hero::placeholder {
-  color: var(--black-sauce);
-  opacity: 0.7;
-}
-```
-
-#### Cards & Content Containers
-```css
-.artist-card {
-  background: var(--off-white-sauce);
-  border: 2px solid var(--black-sauce);
-  border-radius: 0;
-  overflow: hidden;
-  transition: transform 0.2s ease;
-}
-
-.artist-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 4px 4px 0 var(--black-sauce);
-}
-
-.card-header {
-  font-family: 'Sauce', sans-serif;
-  text-transform: uppercase;
-  background: var(--yellow-sauce);
-  padding: 1rem;
-  margin: 0;
-}
-```
-
-### Layout Principles
-
-#### Spacing System
-```css
-:root {
-  --space-xs: 0.5rem;   /* 8px */
-  --space-sm: 1rem;     /* 16px */
-  --space-md: 2rem;     /* 32px */
-  --space-lg: 4rem;     /* 64px */
-  --space-xl: 8rem;     /* 128px */
-}
-```
-
-#### Grid System
-- Use bold, graphic layouts
-- Embrace asymmetry when appropriate
-- Large typography as design elements
-- White space for breathing room
-- NYC-inspired urban grid feel
-
-### Responsive Design
-
-#### Breakpoints
-```css
-/* Mobile First Approach */
-@media (min-width: 768px) { /* Tablet */ }
-@media (min-width: 1024px) { /* Desktop */ }
-@media (min-width: 1440px) { /* Large Desktop */ }
-```
-
-#### Logo Responsive Behavior
-```css
-/* Small screens: Use bottle icon only */
-@media (max-width: 767px) {
-  .logo-full { display: none; }
-  .logo-icon { display: block; }
-}
-
-/* Large screens: Use full logo */
-@media (min-width: 768px) {
-  .logo-full { display: block; }
-  .logo-icon { display: none; }
-}
-```
-
-## Content Guidelines
-
-### Voice & Tone
-- **Bold and Confident**: Use strong, decisive language
-- **NYC Authentic**: Reference NYC culture, boroughs, street art
-- **Creative Professional**: Speak to industry professionals
-- **Approachable**: Not intimidating despite being professional
-
-### Messaging Patterns
-- "FIND YOUR SAUCE" - Main value proposition
-- "FIND THAT SAUCE" - Alternative CTA
-- "NEW ★ TALENT" - Feature highlighting
-- Borough name integration in content sections
-
-### UI Copy Examples
-```
-// Headlines
-"FIND YOUR SAUCE"
-"DISCOVER NYC'S CREATIVE TALENT"
-"THAT ★ DIRECTOR YOU'VE BEEN SEARCHING FOR"
-
-// CTAs  
-"Start Searching"
-"Join the Waitlist"
-"Find That Sauce"
-"Discover Talent"
-
-// Navigation
-"Search"
-"Profile" 
-"Admin"
-"Sign Out"
-
-// Form Labels
-"What type of creative are you looking for?"
-"Location"
-"Experience Level"
-"Discipline"
-```
-
-## shadcn/ui Integration Guidelines
-
-### Component Usage
-- **Always use shadcn/ui components** as the foundation for UI elements
-- **Extend, don't replace**: Customize shadcn components with brand colors and styling
-- **Maintain component API**: Keep shadcn props and behavior intact while applying brand styling
-
-### Theme Configuration
-```css
-/* CSS Variables for shadcn/ui Theme Integration */
- :root {
-    --that-sauce-white: #fffffe;
-    --that-sauce-black: #000000;
-    --that-sauce-red: #e21313;
-    --that-sauce-green: #1fe55c;
-    --that-sauce-yellow: #ff9d00;
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 0 84% 48%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
-
-  .dark {
-    --that-sauce-white: #fffffe;
-    --that-sauce-black: #000000;
-    --that-sauce-red: #e21313;
-    --that-sauce-green: #1fe55c;
-    --that-sauce-yellow: #ff9d00;
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
-```
-
-### Dark/Light Mode Implementation
-
-#### Theme Provider Setup
+#### Content Types in Sanity
 ```typescript
-// app/layout.tsx
-import { ThemeProvider } from "@/components/theme-provider"
+// Core Content Schemas
+- Page (Marketing pages, About, Pricing)
+- Blog Post (Articles, tutorials, industry insights)
+- Case Study (Success stories, creator spotlights)
+- Resource (Guides, templates, tools)
+- Announcement (Platform updates, feature releases)
+- Brand Asset (Logos, images, brand materials)
+- SEO Settings (Meta tags, social sharing)
+- Navigation Menu (Dynamic menu management)
+```
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+#### Editorial Features
+- **Rich Text Editor** with custom blocks for creator embeds
+- **Media Management** for marketing assets and brand content  
+- **SEO Optimization** with meta fields and social sharing previews
+- **Content Scheduling** for announcements and blog posts
+- **Multi-author Support** for content team collaboration
+- **Content Versioning** and draft management
+
+### 4.3 Integrated Features
+
+#### Creator Spotlight System
+- **Sanity Case Studies** can reference **Supabase Creator Profiles**
+- Dynamic "Featured Creator" blocks in marketing content
+- Cross-platform content discoverability
+
+#### Content-Driven SEO
+- **Sanity-managed meta tags** for all marketing pages
+- **Dynamic sitemap generation** combining both content sources
+- **Structured data** for rich search results
+
+#### Brand-Consistent Experience
+- **Centralized brand asset management** in Sanity
+- **Consistent component library** shared across CMS and app content
+- **Design token management** through Sanity for marketing pages
+
+## 5. User Flows & Content Journeys
+
+### 5.1 Marketing Funnel (Sanity-driven)
+```
+Landing Page → Blog/Resources → Case Studies → Sign Up → Portfolio Creation
+```
+
+### 5.2 Creator Journey (Hybrid)
+```
+Discovery (Sanity) → Registration (Supabase) → Portfolio Building (Supabase) → Featured Content (Sanity)
+```
+
+### 5.3 Content Discovery Flow
+```
+Search (Supabase) ↔ Editorial Content (Sanity) ↔ Creator Profiles (Supabase)
+```
+
+## 6. Content Strategy & SEO
+
+### 6.1 Content Categories (Sanity CMS)
+
+#### Marketing & Brand Content
+- **Landing Pages** - Service pages, about, pricing
+- **Success Stories** - Creator spotlights and client testimonials  
+- **Resource Hub** - Industry guides, templates, best practices
+- **Company Blog** - Thought leadership, industry insights
+- **Help Center** - Documentation and user guides
+
+#### SEO-Optimized Content Structure
+```typescript
+// Example Sanity Schema for SEO
+{
+  name: 'seoSettings',
+  title: 'SEO Settings',
+  type: 'object',
+  fields: [
+    { name: 'metaTitle', type: 'string' },
+    { name: 'metaDescription', type: 'text' },
+    { name: 'ogImage', type: 'image' },
+    { name: 'canonicalUrl', type: 'url' },
+    { name: 'focusKeyword', type: 'string' },
+    { name: 'schema', type: 'text' } // JSON-LD
+  ]
+}
+```
+
+### 6.2 Content Marketing Strategy
+- **Weekly Creator Spotlights** - Featuring platform creators
+- **Industry Trend Articles** - Creative industry insights
+- **Resource Library** - Templates, guides, best practices
+- **Platform Updates** - Feature announcements and tutorials
+
+## 7. Technical Implementation Plan
+
+### 7.1 Sanity Setup & Configuration
+
+#### Studio Configuration
+```typescript
+// sanity.config.ts
+export default defineConfig({
+  name: 'that-sauce-studio',
+  title: 'That Sauce Content Studio',
+  projectId: 'your-project-id',
+  dataset: 'production',
+  plugins: [
+    deskTool(),
+    visionTool(),
+    media(),
+    seoPane()
+  ],
+  schema: {
+    types: [
+      // Content types
+      page,
+      blogPost,
+      caseStudy,
+      resource,
+      announcement,
+      
+      // Component types  
+      hero,
+      creatorEmbed,
+      imageGallery,
+      ctaBlock,
+      
+      // Settings
+      siteSettings,
+      navigation
+    ]
+  }
+})
+```
+
+#### Key Schemas
+```typescript
+// Featured Creator Block (connects to Supabase)
+{
+  name: 'creatorEmbed',
+  title: 'Featured Creator',
+  type: 'object',
+  fields: [
+    {
+      name: 'creatorUsername',
+      title: 'Creator Username',
+      type: 'string',
+      description: 'Username from Supabase creator profile'
+    },
+    {
+      name: 'customTitle',
+      title: 'Custom Title',
+      type: 'string'
+    },
+    {
+      name: 'description',
+      title: 'Description',
+      type: 'text'
+    }
+  ]
+}
+```
+
+### 7.2 Next.js Integration
+
+#### Content API Layer
+```typescript
+// lib/sanity/client.ts
+import { createClient } from '@sanity/client'
+
+export const sanityClient = createClient({
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
+  useCdn: process.env.NODE_ENV === 'production',
+  apiVersion: '2024-01-01'
+})
+
+// Content fetching utilities
+export async function getBlogPosts() {
+  return sanityClient.fetch(`
+    *[_type == "blogPost" && publishedAt <= now()] 
+    | order(publishedAt desc)
+  `)
+}
+
+export async function getPageBySlug(slug: string) {
+  return sanityClient.fetch(`
+    *[_type == "page" && slug.current == $slug][0]
+  `, { slug })
+}
+```
+
+#### Route Structure
+```
+pages/
+├── (app)/              # Existing Supabase-powered app
+│   ├── search/
+│   ├── [username]/
+│   └── project/
+├── blog/               # Sanity-powered blog
+│   ├── page.tsx
+│   └── [slug]/
+├── case-studies/       # Sanity-powered case studies  
+├── resources/          # Sanity-powered resources
+├── about/              # Sanity-powered marketing page
+└── [...slug]/          # Dynamic Sanity pages
+```
+
+### 7.3 Component Architecture
+
+#### Shared Component Library
+```typescript
+// components/sanity/PortableTextRenderer.tsx
+export function PortableTextRenderer({ content }: { content: any }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
-      </body>
-    </html>
+    <PortableText
+      value={content}
+      components={{
+        types: {
+          creatorEmbed: CreatorEmbedBlock,
+          imageGallery: ImageGalleryBlock,
+          ctaBlock: CTABlock
+        },
+        marks: {
+          link: ({ children, value }) => (
+            <Link href={value.href} className="text-that-sauce-red underline">
+              {children}
+            </Link>
+          )
+        }
+      }}
+    />
   )
 }
-```
 
-#### Theme Toggle Component
-```typescript
-// components/theme-toggle.tsx
-"use client"
-
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-      className="border-2 border-black dark:border-white"
-    >
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
-    </Button>
-  )
-}
-```
-
-
-### Theme-Aware Component Patterns
-
-#### Responsive Brand Elements
-```typescript
-// Theme-aware logo component
-export function BrandLogo({ size = "default" }) {
-  const { theme } = useTheme()
+// Creator embed that bridges Sanity → Supabase
+async function CreatorEmbedBlock({ value }: { value: any }) {
+  const creator = await getCreatorAction(value.creatorUsername)
+  
+  if (!creator.success) return null
   
   return (
-    <div className="flex items-center gap-2">
-      <Image
-        src={theme === 'dark' ? '/logo-dark.svg' : '/logo-light.svg'}
-        alt="That Sauce"
-        width={size === 'small' ? 24 : 32}
-        height={size === 'small' ? 24 : 32}
-        className="transition-all duration-200"
-      />
-      <span className="font-sauce text-xl uppercase">
-        THAT<span className="text-yellow-sauce">★</span>SAUCE
-      </span>
+    <div className="my-8 p-6 border-2 border-black">
+      <CreatorCard creator={creator.data} featured />
     </div>
   )
 }
 ```
 
-#### Dark Mode Considerations
-```css
-/* Ensure images work in both themes */
-.brand-image {
-  @apply transition-all duration-200;
-}
+## 8. Content Management Workflows
 
-.dark .brand-image {
-  filter: brightness(0.9) contrast(1.1);
-}
+### 8.1 Editorial Process
+1. **Content Planning** - Editorial calendar in Sanity
+2. **Draft Creation** - Content team creates drafts
+3. **Creator Collaboration** - Coordinate with creators for spotlights
+4. **Review & Approval** - Content review workflow
+5. **Publishing** - Scheduled or immediate publication
+6. **Performance Tracking** - Analytics integration
 
-/* Maintain star visibility in all themes */
-.brand-star {
-  @apply text-yellow-sauce;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
-}
+### 8.2 Creator Spotlight Workflow
+```
+Content Team identifies Creator (Sanity) 
+→ Pulls Creator data (Supabase API)
+→ Creates Case Study content (Sanity)
+→ Creator approves feature
+→ Content publishes with live portfolio link
+```
 
-.dark .brand-star {
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
+### 8.3 Brand Asset Management
+- **Centralized Media Library** in Sanity
+- **Brand guideline enforcement** through content models
+- **Asset versioning** and approval workflows
+- **Cross-platform asset distribution**
+
+## 9. SEO & Performance Strategy
+
+### 9.1 Technical SEO Implementation
+```typescript
+// Automated SEO from Sanity content
+export async function generateMetadata({ params }: PageProps) {
+  const page = await getPageBySlug(params.slug)
+  
+  return {
+    title: page.seo?.metaTitle || page.title,
+    description: page.seo?.metaDescription,
+    openGraph: {
+      title: page.seo?.metaTitle || page.title,
+      description: page.seo?.metaDescription,
+      images: page.seo?.ogImage ? [urlFor(page.seo.ogImage).url()] : []
+    }
+  }
 }
 ```
 
-### shadcn/ui Component Overrides
+### 9.2 Content Performance
+- **Sanity Analytics** integration for content performance
+- **Cross-reference tracking** between content and creator discovery
+- **Conversion funnel optimization** from content to sign-ups
 
-#### Global Component Styles
-```css
-/* globals.css - Override shadcn defaults with brand styling */
-
-/* Force sharp corners globally */
-* {
-  border-radius: 0 !important;
-}
-
-/* Enhanced button styling */
-.btn-primary {
-  @apply bg-black-sauce text-off-white-sauce border-2 border-black-sauce;
-  @apply hover:bg-spicy-red-sauce hover:border-spicy-red-sauce;
-  @apply dark:bg-off-white-sauce dark:text-black-sauce dark:border-off-white-sauce;
-  @apply dark:hover:bg-yellow-sauce dark:hover:text-black-sauce;
-}
-
-/* Enhanced input styling */
-.input-sauce {
-  @apply border-2 border-black-sauce bg-transparent;
-  @apply focus:border-yellow-sauce focus:ring-2 focus:ring-yellow-sauce;
-  @apply dark:border-off-white-sauce dark:focus:border-yellow-sauce;
-}
-
-/* Enhanced card styling */
-.card-sauce {
-  @apply border-2 border-black-sauce bg-off-white-sauce;
-  @apply hover:shadow-sauce hover:-translate-y-1;
-  @apply dark:border-off-white-sauce dark:bg-black-sauce;
-  @apply dark:hover:shadow-sauce-dark;
-}
+### 9.3 Site Architecture
+```
+that-sauce.com/
+├── /                   # Landing page (Sanity)
+├── /search             # Search interface (Supabase)
+├── /blog               # Content hub (Sanity)
+├── /case-studies       # Success stories (Sanity)
+├── /resources          # Resource library (Sanity)
+├── /[username]         # Creator profiles (Supabase)
+└── /admin              # Both Sanity Studio & Supabase admin
 ```
 
-## Development Best Practices
+## 10. Development Phases
 
-### shadcn/ui Best Practices
-- **Always use cn() utility**: Combine Tailwind classes properly with shadcn components
-- **Maintain component contracts**: Don't break shadcn component APIs when customizing
-- **Theme consistency**: Ensure all custom components work in both light and dark modes
-- **Sharp corners rule**: Override all border-radius to 0 for brand consistency
-- **Strong borders**: Use 2px borders minimum for brand aesthetic
-- **Hover effects**: Implement consistent sauce-style shadow effects
+### Phase 1: Sanity Foundation (Week 1-2)
+- [ ] Sanity project setup and schema design
+- [ ] Core content types (Page, Blog Post, Case Study)
+- [ ] Basic Next.js integration
+- [ ] Content migration planning
 
-### Accessibility
-- Maintain high contrast ratios (black on white)
-- Ensure star symbols have proper alt text
-- Use semantic HTML structure
-- Support keyboard navigation
-- Test with screen readers
-- Ensure sufficient color contrast in both themes
+### Phase 2: Content Integration (Week 3-4)  
+- [ ] Portable Text renderer with custom blocks
+- [ ] Creator embed functionality (Sanity ↔ Supabase)
+- [ ] SEO metadata automation
+- [ ] Media asset management
 
-### Performance
-- Optimize bottle imagery for web
-- Use system fonts as fallbacks
-- Implement proper image loading strategies
-- Minimize theme switching flash with suppressHydrationWarning
-- Use CSS custom properties for efficient theme switching
+### Phase 3: Editorial Features (Week 5-6)
+- [ ] Content workflow implementation
+- [ ] Multi-author support
+- [ ] Content scheduling
+- [ ] Brand asset library
 
-### Brand Consistency Checklist
-- [ ] Logo used correctly (size appropriate version)
-- [ ] Color palette strictly followed
-- [ ] Typography hierarchy maintained
-- [ ] Star element incorporated where appropriate
-- [ ] NYC cultural references included
-- [ ] Bold, confident messaging
-- [ ] Bottle imagery integrated meaningfully
-- [ ] Accessible design principles followed
-- [ ] Dark/light mode support implemented
-- [ ] Sharp corners maintained (no border-radius)
-- [ ] Strong borders (2px minimum) applied
-- [ ] shadcn/ui components properly themed
+### Phase 4: Performance & Launch (Week 7-8)
+- [ ] Content performance tracking
+- [ ] SEO optimization
+- [ ] Content team training
+- [ ] Launch marketing content
 
-## File Organization
-```
-/assets
-  /images
-    /logos
-      - bottle-icon.svg
-      - full-logo.svg
-      - wordmark-stacked.svg
-      - wordmark-inline.svg
-    /graphics
-      - sauce-bottle-hero.png
-      - star-icon.svg
-  /fonts
-    - sauce-custom.woff2
-    - helvetica-neue.woff2
-```
+## 11. Success Metrics
+
+### Content Performance KPIs
+- **Content Engagement** - Time on page, bounce rate for Sanity content
+- **Conversion Funnel** - Content → Sign-up → Portfolio creation rates
+- **Creator Discovery** - Traffic from content to creator profiles
+- **SEO Performance** - Organic search traffic growth
+- **Content ROI** - Cost per acquisition through content marketing
+
+### Platform Integration Metrics  
+- **Cross-platform Navigation** - Movement between content and app
+- **Creator Feature Impact** - Spotlight → profile view correlation
+- **Content-driven Sign-ups** - Attribution from content to user acquisition
+
+## 12. Content Strategy Roadmap
+
+### Month 1: Foundation Content
+- Company story and mission pages
+- Basic creator onboarding guides  
+- Initial blog content strategy
+
+### Month 2: Creator-Focused Content
+- First creator spotlight case studies
+- Industry trend analysis articles
+- Resource library launch
+
+### Month 3: Community & Growth
+- User-generated content integration
+- Community success stories
+- Advanced tutorial content
+
+### Month 6: Content Marketing Maturity
+- Full editorial calendar execution
+- Advanced SEO content clusters
+- Creator collaboration programs
+- Content partnership initiatives
 
 ---
 
-*Remember: "That Sauce" represents the intersection of great taste and artistic excellence. Every UI decision should reflect this premium, creative, NYC-inspired aesthetic while maintaining usability for creative professionals.*
+## Conclusion
+
+The integration of Sanity CMS transforms "That Sauce" from a pure talent search platform into a comprehensive creative ecosystem. By combining Supabase's powerful real-time capabilities with Sanity's sophisticated content management, we create a platform that not only connects creatives but also educates, inspires, and grows the creative community through thoughtful content strategy.
+
+This hybrid approach allows us to maintain the dynamic, personalized experience that creators and talent seekers expect while building a content marketing engine that drives organic growth and establishes "That Sauce" as a thought leader in the creative industry.

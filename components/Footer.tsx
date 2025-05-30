@@ -20,12 +20,11 @@ export function Footer() {
             </div>
 
             {/* Brand Name with Star */}
-            <div className="flex items-center space-x-1">
-              <span className="text-foreground font-sans text-lg font-medium tracking-wide uppercase">
+            <div className="flex items-center space-x-1 font-sauce">
+              <span className="text-foreground text-lg tracking-wide uppercase">
                 that
               </span>
-              <span className="text-[#ff9d00] text-xl drop-shadow-sm">★</span>
-              <span className="text-foreground font-sans text-lg font-medium tracking-wide uppercase">
+              <span className="text-foreground text-lg tracking-wide uppercase">
                 sauce
               </span>
             </div>

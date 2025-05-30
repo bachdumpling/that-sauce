@@ -13,48 +13,70 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
 
   return (
-    <div className="flex-1 flex flex-col min-w-80 max-w-md mx-auto">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground mb-6">
-        Don't have an account?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Sign up
-        </Link>
-      </p>
-
-      {/* Display errors/success messages at the top */}
-      {("error" in searchParams || "success" in searchParams) && (
-        <div className="mb-6">
-          <FormMessage message={searchParams} />
-        </div>
-      )}
-
-      {/* Google Sign In */}
-      <div className="mb-6">
-        <form action={signInWithGoogleAction}>
-          <Button className="w-full" type="submit">
-            Sign in with Google
-          </Button>
-        </form>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          You will be redirected to Google to complete the sign-in process
+    <div className="w-full max-w-sm mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+        <p className="text-muted-foreground">
+          Don't have an account?{" "}
+          <Link
+            className="text-primary font-medium underline underline-offset-4 hover:text-primary/80 transition-colors"
+            href="/sign-up"
+          >
+            Sign up
+          </Link>
         </p>
       </div>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or</span>
-        </div>
-      </div>
+      {/* Display errors/success messages */}
+      {("error" in searchParams || "success" in searchParams) && (
+        <FormMessage message={searchParams} />
+      )}
 
-      {/* Email and Password Sign In */}
-      <div className="mb-6">
-        <form action={signInAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+      <div className="space-y-4">
+        {/* Google Sign In */}
+        <form action={signInWithGoogleAction}>
+          <Button variant="outline" className="w-full h-11" type="submit">
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="currentColor"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
+            Continue with Google
+          </Button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
+
+        {/* Email and Password Sign In */}
+        <form action={signInAction} className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="email" className="text-sm font-medium">
+              Email
+            </Label>
             <Input
               name="email"
               id="email"
@@ -62,39 +84,44 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
               placeholder="you@example.com"
               required
               autoComplete="email"
+              className="h-11"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="space-y-1">
+            <Label htmlFor="password" className="text-sm font-medium">
+              Password
+            </Label>
             <Input
               name="password"
               id="password"
               type="password"
-              placeholder="Your password"
+              placeholder="Enter your password"
               required
               autoComplete="current-password"
+              className="h-11"
             />
           </div>
-          <Button type="submit" className="w-full">
-            Sign in with Email
+          <Button type="submit" className="w-full h-11">
+            Sign in
           </Button>
         </form>
-      </div>
 
-      <div className="relative mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or</span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or</span>
-        </div>
-      </div>
 
-      {/* Magic Link Sign In */}
-      <div>
-        <form action={signInWithOTPAction} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="magic-email">Email</Label>
+        {/* Magic Link Sign In */}
+        <form action={signInWithOTPAction} className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="magic-email" className="text-sm font-medium">
+              Email for magic link
+            </Label>
             <Input
               name="email"
               id="magic-email"
@@ -102,13 +129,14 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
               placeholder="you@example.com"
               required
               autoComplete="email"
+              className="h-11"
             />
           </div>
-          <Button type="submit" className="w-full">
-            Send Magic Link
+          <Button type="submit" variant="secondary" className="w-full h-11">
+            Send magic link
           </Button>
           <p className="text-xs text-muted-foreground text-center">
-            We'll send you a login link to your email
+            We'll send you a secure login link
           </p>
         </form>
       </div>

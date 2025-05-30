@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --font-that-sauce: "ThatSauceRegular", cursive, sans-serif;
     --that-sauce-white: #fffffe;
     --that-sauce-black: #000000;
     --that-sauce-red: #e21313;
@@ -28,7 +29,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 0 84% 48%;
-    --radius: 0.5rem;
+    --radius: 2rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -37,11 +38,6 @@
   }
 
   .dark {
-    --that-sauce-white: #fffffe;
-    --that-sauce-black: #000000;
-    --that-sauce-red: #e21313;
-    --that-sauce-green: #1fe55c;
-    --that-sauce-yellow: #ff9d00;
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -94,6 +90,7 @@
     background-color: rgba(0, 0, 0, 0.7);
   }
 }
+
 @layer base {
   * {
     @apply border-border;
@@ -102,4 +99,12 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
   }
+}
+
+@font-face {
+  font-family: "ThatSauceRegular";
+  src: url("/fonts/ThatSauceRegular.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }

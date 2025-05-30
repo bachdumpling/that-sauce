@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
     path.startsWith("/api") ||
     path.startsWith("/onboarding") ||
     path.startsWith("/[username]/") ||
+    path.startsWith("/studio") ||
     path === "/"
   ) {
     return response;

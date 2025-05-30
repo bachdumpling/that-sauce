@@ -26,6 +26,12 @@ const config = {
           "Arial",
           "sans-serif",
         ],
+        sauce: [
+          "var(--font-that-sauce)",
+          "ThatSauceRegular",
+          "cursive",
+          "sans-serif",
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
