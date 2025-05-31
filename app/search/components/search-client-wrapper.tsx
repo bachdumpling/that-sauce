@@ -27,35 +27,8 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Toggle } from "@/components/ui/toggle";
 import { useRouter, useSearchParams } from "next/navigation";
 import { search, enhanceSearchPrompt } from "@/lib/api/search";
-import { CreatorCard } from "@/components/shared/creator-card";
-import { GroupedSearchResult } from "@/lib/search/utils";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -85,9 +58,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
 import {
-  CreatorWithContent,
+
   SearchResponse,
-  SearchEnhancement,
 } from "@/types/search";
 
 interface SearchResults {

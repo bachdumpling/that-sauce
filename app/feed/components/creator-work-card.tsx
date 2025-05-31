@@ -43,7 +43,7 @@ export default function CreatorWorkCard({
   }
 
   // Get image URL
-  const imageUrl = project.images[0].url;
+  const imageUrl = project.images?.[0]?.url;
 
   // Get creator display name
   const creatorName =
@@ -64,9 +64,9 @@ export default function CreatorWorkCard({
         href={`/project/${project.id}`}
         className="relative block overflow-hidden w-full"
       >
-        <div className="overflow-hidden relative bg-gray-100 break-inside-avoid mb-4 m-4 shadow-lg">
+        <div className="rounded-[var(--radius)] overflow-hidden relative bg-gray-100 break-inside-avoid mb-4 m-4 shadow-lg">
           <Image
-            src={imageUrl}
+            src={imageUrl || ""}
             alt={project.title || "Creator Work"}
             width={500}
             height={300}

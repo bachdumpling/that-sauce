@@ -1,7 +1,5 @@
-import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { ProfileClientWrapper } from "./components/profile-client-wrapper";
 
 export default async function ProfilePage() {
   const supabase = await createClient();

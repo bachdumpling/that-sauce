@@ -25,12 +25,16 @@ import { EditProfileButton } from "@/components/shared/edit-profile-button";
 import { DynamicLogo } from "./dynamic-logo";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { NavigationContent } from "@/types/sanity";
+import { urlFor } from "@/sanity/lib/image";
+import { useTheme } from "next-themes";
 
 interface NavClientProps {
   initialUser: any;
   creatorUsername: string | null;
   profile: any | null;
   layout?: "desktop" | "mobile";
+  navigationContent?: NavigationContent | null;
 }
 
 export function NavClient({
@@ -38,15 +42,126 @@ export function NavClient({
   creatorUsername,
   profile,
   layout = "desktop",
+  navigationContent,
 }: NavClientProps) {
   const router = useRouter();
   const supabase = createClient();
+  const { theme } = useTheme();
 
   // Function to handle sign out
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.refresh();
   };
+
+  // Get content with fallbacks
+  const getContent = () => {
+    if (!navigationContent) {
+      // Fallback to existing hardcoded values
+      return {
+        mainNavigation: mainRoutes,
+        authNavigation: {
+          signInText: "Log in",
+          signInUrl: "/sign-in",
+          signUpText: "Sign up",
+          signUpUrl: "/sign-up",
+          signOutText: "Sign out",
+        },
+        creatorNavigation: {
+          portfolioText: "Portfolio",
+          myPortfolioText: "My Portfolio",
+          editProfileText: "Edit Profile",
+        },
+        adminNavigation: adminRoutes,
+        userGreeting: {
+          greetingPrefix: "Hey,",
+          fallbackGreeting: "there",
+        },
+        brand: {
+          logoLight: null,
+          logoDark: null,
+          logoDefault: null,
+          logoWidth: 200,
+          logoHeight: 200,
+          brandName: "that sauce",
+          homeUrl: "/",
+          showBrandName: false,
+          logoPosition: "center",
+        },
+      };
+    }
+
+    return {
+      mainNavigation:
+        navigationContent.mainNavigation &&
+        Array.isArray(navigationContent.mainNavigation)
+          ? navigationContent.mainNavigation.filter((link) => link.isVisible)
+          : mainRoutes,
+      authNavigation: navigationContent.authNavigation || {
+        signInText: "Log in",
+        signInUrl: "/sign-in",
+        signUpText: "Sign up",
+        signUpUrl: "/sign-up",
+        signOutText: "Sign out",
+      },
+      creatorNavigation: navigationContent.creatorNavigation || {
+        portfolioText: "Portfolio",
+        myPortfolioText: "My Portfolio",
+        editProfileText: "Edit Profile",
+      },
+      adminNavigation:
+        navigationContent.adminNavigation &&
+        Array.isArray(navigationContent.adminNavigation)
+          ? navigationContent.adminNavigation.filter((link) => link.isVisible)
+          : adminRoutes,
+      userGreeting: navigationContent.userGreeting || {
+        greetingPrefix: "Hey,",
+        fallbackGreeting: "there",
+      },
+      brand: navigationContent.brand || {
+        logoLight: null,
+        logoDark: null,
+        logoDefault: null,
+        logoWidth: 200,
+        logoHeight: 200,
+        brandName: "that sauce",
+        homeUrl: "/",
+        showBrandName: false,
+        logoPosition: "center",
+      },
+    };
+  };
+
+  const content = getContent();
+
+  // Get the appropriate logo based on theme
+  const getCurrentLogo = () => {
+    const { logoLight, logoDark, logoDefault } = content.brand;
+
+    if (theme === "dark" && logoDark) {
+      return urlFor(logoDark)
+        .width(content.brand.logoWidth || 200)
+        .height(content.brand.logoHeight || 200)
+        .url();
+    }
+    if (theme === "light" && logoLight) {
+      return urlFor(logoLight)
+        .width(content.brand.logoWidth || 200)
+        .height(content.brand.logoHeight || 200)
+        .url();
+    }
+    if (logoDefault) {
+      return urlFor(logoDefault)
+        .width(content.brand.logoWidth || 200)
+        .height(content.brand.logoHeight || 200)
+        .url();
+    }
+
+    // Fallback to existing logo
+    return null;
+  };
+
+  const logoSrc = getCurrentLogo();
 
   // Mobile layout
   if (layout === "mobile") {
@@ -65,10 +180,10 @@ export function NavClient({
           </Avatar>
           <div className="flex flex-col">
             <span className="text-sm font-medium">
-              Hey,{" "}
+              {content.userGreeting.greetingPrefix}{" "}
               {profile?.first_name ||
                 initialUser.user_metadata?.name ||
-                "there"}
+                content.userGreeting.fallbackGreeting}
               !
             </span>
             {creatorUsername && (
@@ -85,7 +200,9 @@ export function NavClient({
             variant="outline"
             className="w-full justify-center py-2"
           >
-            <Link href={`/${creatorUsername}`}>Portfolio</Link>
+            <Link href={`/${creatorUsername}`}>
+              {content.creatorNavigation.portfolioText}
+            </Link>
           </Button>
         )}
 
@@ -93,10 +210,10 @@ export function NavClient({
           className="w-full justify-center py-2"
           username={creatorUsername || undefined}
         >
-          <span>Edit Profile</span>
+          <span>{content.creatorNavigation.editProfileText}</span>
         </EditProfileButton>
 
-        {mainRoutes
+        {content.mainNavigation
           .filter((route) => route.path !== "/")
           .map((route) => (
             <Button
@@ -106,20 +223,37 @@ export function NavClient({
               variant="outline"
               className="w-full justify-center py-2"
             >
-              <Link href={route.path}>{route.label}</Link>
+              <Link
+                href={route.path}
+                target={
+                  "openInNewTab" in route && route.openInNewTab
+                    ? "_blank"
+                    : undefined
+                }
+                rel={
+                  "openInNewTab" in route && route.openInNewTab
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+              >
+                {route.label}
+              </Link>
             </Button>
           ))}
 
-        {isAdminEmail(initialUser.email) && (
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="w-full justify-center py-2"
-          >
-            <Link href={adminRoutes[0].path}>{adminRoutes[0].label}</Link>
-          </Button>
-        )}
+        {isAdminEmail(initialUser.email) &&
+          content.adminNavigation.length > 0 && (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="w-full justify-center py-2"
+            >
+              <Link href={content.adminNavigation[0].path}>
+                {content.adminNavigation[0].label}
+              </Link>
+            </Button>
+          )}
 
         <Button
           onClick={handleSignOut}
@@ -127,24 +261,33 @@ export function NavClient({
           size="sm"
           className="w-full justify-center py-2 mt-2"
         >
-          Sign out
+          {content.authNavigation.signOutText}
         </Button>
       </div>
     ) : (
       <div className="flex flex-col gap-2 w-full">
-        {userAuthRoutes.map((route) => (
-          <Button
-            key={route.path}
-            asChild
-            size="sm"
-            variant={route.path === "/sign-up" ? "default" : "outline"}
-            className="w-full justify-start"
-          >
-            <Link href={route.path}>{route.label}</Link>
-          </Button>
-        ))}
+        <Button
+          asChild
+          size="sm"
+          variant="outline"
+          className="w-full justify-start"
+        >
+          <Link href={content.authNavigation.signInUrl}>
+            {content.authNavigation.signInText}
+          </Link>
+        </Button>
+        <Button
+          asChild
+          size="sm"
+          variant="default"
+          className="w-full justify-start"
+        >
+          <Link href={content.authNavigation.signUpUrl}>
+            {content.authNavigation.signUpText}
+          </Link>
+        </Button>
 
-        {mainRoutes
+        {content.mainNavigation
           .filter((route) => route.path.includes("search"))
           .map((route) => (
             <Button
@@ -154,7 +297,21 @@ export function NavClient({
               variant="outline"
               className="w-full justify-start"
             >
-              <Link href={route.path}>{route.label}</Link>
+              <Link
+                href={route.path}
+                target={
+                  "openInNewTab" in route && route.openInNewTab
+                    ? "_blank"
+                    : undefined
+                }
+                rel={
+                  "openInNewTab" in route && route.openInNewTab
+                    ? "noopener noreferrer"
+                    : undefined
+                }
+              >
+                {route.label}
+              </Link>
             </Button>
           ))}
       </div>
@@ -166,7 +323,7 @@ export function NavClient({
     <div className="flex items-center justify-between gap-4 w-full">
       {/* Left */}
       <div className="flex gap-4 justify-start items-center w-full">
-        {mainRoutes.map((route) => (
+        {content.mainNavigation.map((route) => (
           <Button
             key={route.path}
             asChild
@@ -174,7 +331,21 @@ export function NavClient({
             variant="ghost"
             className="p-4 rounded-full"
           >
-            <Link href={route.path}>{route.label}</Link>
+            <Link
+              href={route.path}
+              target={
+                "openInNewTab" in route && route.openInNewTab
+                  ? "_blank"
+                  : undefined
+              }
+              rel={
+                "openInNewTab" in route && route.openInNewTab
+                  ? "noopener noreferrer"
+                  : undefined
+              }
+            >
+              {route.label}
+            </Link>
           </Button>
         ))}
 
@@ -186,30 +357,55 @@ export function NavClient({
             variant="ghost"
             className="p-4 rounded-full"
           >
-            <Link href={`/${creatorUsername}`}>Portfolio</Link>
+            <Link href={`/${creatorUsername}`}>
+              {content.creatorNavigation.portfolioText}
+            </Link>
           </Button>
         )}
       </div>
 
       {/* Middle */}
       <div className="flex gap-4 justify-center items-center font-semibold w-full">
-        <Link href={"/"}>
-          <DynamicLogo width={200} height={200} priority />
+        <Link href={content.brand.homeUrl || "/"}>
+          {logoSrc ? (
+            <Image
+              src={logoSrc}
+              alt={content.brand.brandName || "Logo"}
+              width={content.brand.logoWidth || 200}
+              height={content.brand.logoHeight || 200}
+              priority
+              className="transition-transform hover:scale-105"
+            />
+          ) : (
+            <DynamicLogo
+              width={content.brand.logoWidth || 200}
+              height={content.brand.logoHeight || 200}
+              priority
+            />
+          )}
         </Link>
+        {content.brand.showBrandName && content.brand.brandName && (
+          <span className="font-sauce text-lg tracking-wide uppercase">
+            {content.brand.brandName}
+          </span>
+        )}
       </div>
 
       {/* Right */}
       <div className="flex justify-end items-center w-full gap-2">
-        {isAdminEmail(initialUser.email) && (
-          <Button
-            asChild
-            size="sm"
-            variant="ghost"
-            className="p-4 rounded-full"
-          >
-            <Link href={adminRoutes[0].path}>{adminRoutes[0].label}</Link>
-          </Button>
-        )}
+        {isAdminEmail(initialUser.email) &&
+          content.adminNavigation.length > 0 && (
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              className="p-4 rounded-full"
+            >
+              <Link href={content.adminNavigation[0].path}>
+                {content.adminNavigation[0].label}
+              </Link>
+            </Button>
+          )}
 
         {/* User Menu Dropdown */}
         <DropdownMenu>
@@ -269,7 +465,24 @@ export function NavClient({
                     </p>
                   )}
                 </div>
+
+                {/* email */}
+                <p className="text-xs text-muted-foreground text-center">
+                  {initialUser.email}
+                </p>
               </div>
+
+              {/* Portfolio link for creators */}
+              {creatorUsername && (
+                <DropdownMenuItem className="focus:bg-accent rounded-2xl p-4">
+                  <Link
+                    href={`/${creatorUsername}`}
+                    className="w-full text-sm font-medium text-left"
+                  >
+                    {content.creatorNavigation.myPortfolioText}
+                  </Link>
+                </DropdownMenuItem>
+              )}
 
               {profile && (
                 <DropdownMenuItem className="focus:bg-accent rounded-2xl p-4">
@@ -277,17 +490,39 @@ export function NavClient({
                     className="w-full flex justify-start p-0 h-auto"
                     username={creatorUsername || undefined}
                   >
-                    <span className="text-sm font-medium">Edit Profile</span>
+                    <span className="text-sm font-medium">
+                      {content.creatorNavigation.editProfileText}
+                    </span>
                   </EditProfileButton>
                 </DropdownMenuItem>
               )}
+
+              {/* Admin links */}
+              {isAdminEmail(initialUser.email) &&
+                content.adminNavigation.length > 0 && (
+                  <>
+                    {content.adminNavigation.map((route) => (
+                      <DropdownMenuItem
+                        key={route.path}
+                        className="focus:bg-accent rounded-2xl p-4"
+                      >
+                        <Link
+                          href={route.path}
+                          className="w-full text-sm font-medium text-left"
+                        >
+                          {route.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
 
               <DropdownMenuItem className="focus:bg-accent rounded-2xl p-4">
                 <button
                   onClick={handleSignOut}
                   className="w-full cursor-pointer text-sm font-medium text-left"
                 >
-                  Sign out
+                  {content.authNavigation.signOutText}
                 </button>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -303,45 +538,51 @@ export function NavClient({
     </div>
   ) : (
     <div className="flex items-center justify-between gap-4 w-full">
-      {/* Left */}
+      {/* Left - Empty or Logo */}
       <div className="flex gap-4 justify-start items-center w-full">
-        {mainRoutes.map((route) => (
-          <Button
-            key={route.path}
-            asChild
-            size="sm"
-            variant="ghost"
-            className="p-4 rounded-full"
-          >
-            <Link href={route.path}>{route.label}</Link>
-          </Button>
-        ))}
+        {/* You could add some non-auth nav items here if needed */}
       </div>
 
-      {/* Middle */}
+      {/* Middle - Logo */}
       <div className="flex gap-4 justify-center items-center font-semibold w-full">
-        <Link href={"/"}>
-          <DynamicLogo width={200} height={200} priority />
+        <Link href={content.brand.homeUrl || "/"}>
+          {logoSrc ? (
+            <Image
+              src={logoSrc}
+              alt={content.brand.brandName || "Logo"}
+              width={content.brand.logoWidth || 200}
+              height={content.brand.logoHeight || 200}
+              priority
+              className="transition-transform hover:scale-105"
+            />
+          ) : (
+            <DynamicLogo
+              width={content.brand.logoWidth || 200}
+              height={content.brand.logoHeight || 200}
+              priority
+            />
+          )}
         </Link>
+        {content.brand.showBrandName && content.brand.brandName && (
+          <span className="font-sauce text-lg tracking-wide uppercase">
+            {content.brand.brandName}
+          </span>
+        )}
       </div>
 
-      {/* Right */}
-      <div className="flex gap-2 justify-end items-center w-full">
+      {/* Right - Auth buttons */}
+      <div className="flex justify-end items-center w-full gap-2">
+        <Button asChild size="sm" variant="ghost" className="p-4 rounded-full">
+          <Link href={content.authNavigation.signInUrl}>
+            {content.authNavigation.signInText}
+          </Link>
+        </Button>
+        <Button asChild size="sm" className="p-4 rounded-full">
+          <Link href={content.authNavigation.signUpUrl}>
+            {content.authNavigation.signUpText}
+          </Link>
+        </Button>
         <ThemeSwitcher />
-        {userAuthRoutes.map((route) => (
-          <Button
-            key={route.path}
-            asChild
-            variant={route.path === "/sign-up" ? "default" : "ghost"}
-            className={
-              route.path === "/sign-up"
-                ? "px-4 py-2 rounded-full"
-                : "p-6 rounded-full"
-            }
-          >
-            <Link href={route.path}>{route.label}</Link>
-          </Button>
-        ))}
       </div>
     </div>
   );

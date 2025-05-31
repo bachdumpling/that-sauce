@@ -29,6 +29,7 @@ import {
   startPortfolioAnalysis,
   getAnalysisJobStatus,
   getPortfolioAnalysisResults,
+  cleanupStaleAnalysisJobsAction,
 } from "@/actions/analysis-actions";
 import { toast } from "sonner";
 
@@ -173,8 +174,8 @@ export function AnalysisClient({ username, initialData }: AnalysisClientProps) {
 
       if (result.success) {
         setIsAnalysisInProgress(true);
-        setJobId(result.data.job_id);
-        setJobStatus(result.data.status);
+        setJobId(result.data?.job_id || null);
+        setJobStatus(result.data?.status || "pending");
         setCurrentRunState("QUEUED");
         setAnalysisProgress(0);
 
@@ -185,6 +186,32 @@ export function AnalysisClient({ username, initialData }: AnalysisClientProps) {
     } catch (error: any) {
       console.error("Error starting analysis:", error);
       toast.error(error.message || "Failed to start analysis");
+    }
+  };
+
+  // Clean up stale jobs and refresh
+  const handleCleanupAndRefresh = async () => {
+    if (!portfolioId) {
+      toast.error("Portfolio not found");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const cleanupResult = await cleanupStaleAnalysisJobsAction(portfolioId);
+
+      if (cleanupResult.success) {
+        // Refresh the page to get updated state
+        window.location.reload();
+        toast.success("Stale jobs cleaned up. Page refreshed.");
+      } else {
+        toast.error("Failed to clean up stale jobs");
+      }
+    } catch (error: any) {
+      console.error("Error cleaning up stale jobs:", error);
+      toast.error("Failed to clean up stale jobs");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -300,7 +327,30 @@ export function AnalysisClient({ username, initialData }: AnalysisClientProps) {
         <Alert className="mb-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Analysis not available</AlertTitle>
-          <AlertDescription>{analysisMessage}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{analysisMessage}</span>
+            {analysisMessage.includes("in progress") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCleanupAndRefresh}
+                disabled={isLoading}
+                className="ml-4"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Cleaning...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Force Refresh
+                  </>
+                )}
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       )}
 

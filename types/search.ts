@@ -14,7 +14,7 @@ export interface SearchQueryParams {
 export interface MediaContent {
   id: string;
   type: "image" | "video";
-  url: string;
+  url: string | null;
   title?: string;
   description?: string;
   score?: number;
@@ -43,7 +43,7 @@ export interface ProjectContent {
   }>;
   videos: Array<{
     id: string;
-    url: string;
+    url: string | null;
     title?: string;
     description?: string;
     youtube_id?: string;
@@ -91,7 +91,7 @@ export interface RawSearchResult {
   creator_score?: number;
   content_id: string;
   content_type: "image" | "video";
-  content_url: string;
+  content_url: string | null;
   content_title?: string;
   content_description?: string;
   content_score?: number;

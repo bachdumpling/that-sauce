@@ -733,30 +733,54 @@ export async function getCreatorPortfolio(username: string) {
   try {
     const supabase = await createClient();
 
-    // Get creator with their projects and media for portfolio generation
-    const { data: creator, error } = await supabase
+    // First get the creator
+    const { data: creator, error: creatorError } = await supabase
       .from("creators")
-      .select(
-        `
-        *,
-        projects (
-          *,
-          images (id, url, alt_text, order),
-          videos (id, url, youtube_id, vimeo_id)
-        )
-        `
-      )
+      .select("id, username")
       .eq("username", username)
       .single();
 
-    if (error || !creator) {
+    if (creatorError || !creator) {
       return { success: false, error: "Creator not found" };
     }
 
-    // TODO: Implement portfolio generation logic here
-    // This could include AI-generated insights, categorization, etc.
+    // Check if portfolio already exists
+    const { data: existingPortfolio, error: portfolioError } = await supabase
+      .from("portfolios")
+      .select("*")
+      .eq("creator_id", creator.id)
+      .single();
 
-    return { success: true, data: creator };
+    if (existingPortfolio) {
+      return { success: true, data: existingPortfolio };
+    }
+
+    // If no portfolio exists, create one
+    if (portfolioError && portfolioError.code === "PGRST116") {
+      const { data: newPortfolio, error: createError } = await supabase
+        .from("portfolios")
+        .insert({
+          creator_id: creator.id,
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating portfolio:", createError);
+        return {
+          success: false,
+          error: "Failed to create portfolio",
+        };
+      }
+
+      return { success: true, data: newPortfolio };
+    }
+
+    // If there was a different error, return it
+    return {
+      success: false,
+      error: portfolioError?.message || "Failed to fetch portfolio",
+    };
   } catch (error: any) {
     console.error("Error fetching creator portfolio:", error);
     return {

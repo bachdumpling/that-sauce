@@ -23,9 +23,10 @@ export interface AnalysisJob {
   creator_id: string;
   status: "pending" | "processing" | "completed" | "failed" | "cancelled";
   progress: number;
-  status_message?: string;
+  error?: string | null;
   created_at: string;
   updated_at: string;
+  completed_at?: string | null;
 }
 
 export interface CanAnalyzeResponse {
@@ -61,6 +62,82 @@ const projectAnalysisSchema = z.object({
 const jobStatusSchema = z.object({
   jobId: z.string().uuid("Invalid job ID"),
 });
+
+/**
+ * Clean up stale analysis jobs
+ */
+export async function cleanupStaleAnalysisJobsAction(portfolioId: string) {
+  try {
+    const supabase = await createClient();
+
+    // Get the current user
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return {
+        success: false,
+        error: "Authentication required",
+      };
+    }
+
+    // Find jobs that have been stuck in pending/processing for more than 30 minutes
+    const thirtyMinutesAgo = new Date();
+    thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
+
+    const { data: staleJobs, error: staleJobsError } = await supabase
+      .from("analysis_jobs")
+      .select("id, status, created_at")
+      .eq("portfolio_id", portfolioId)
+      .in("status", ["pending", "processing"])
+      .lt("created_at", thirtyMinutesAgo.toISOString());
+
+    if (staleJobsError) {
+      console.error("Error finding stale jobs:", staleJobsError);
+      return { success: false, error: "Failed to check for stale jobs" };
+    }
+
+    if (staleJobs && staleJobs.length > 0) {
+      // Cancel stale jobs
+      const { error: cancelError } = await supabase
+        .from("analysis_jobs")
+        .update({
+          status: "failed",
+          error: "Job timed out",
+          updated_at: new Date().toISOString(),
+        })
+        .in(
+          "id",
+          staleJobs.map((job) => job.id)
+        );
+
+      if (cancelError) {
+        console.error("Error cancelling stale jobs:", cancelError);
+        return { success: false, error: "Failed to cancel stale jobs" };
+      }
+
+      return {
+        success: true,
+        message: `Cleaned up ${staleJobs.length} stale job(s)`,
+        cleanedJobs: staleJobs.length,
+      };
+    }
+
+    return {
+      success: true,
+      message: "No stale jobs found",
+      cleanedJobs: 0,
+    };
+  } catch (error: any) {
+    console.error("Error in cleanupStaleAnalysisJobsAction:", error);
+    return {
+      success: false,
+      error: error.message || "An unexpected error occurred",
+    };
+  }
+}
 
 /**
  * Check if a portfolio can be analyzed
@@ -150,13 +227,39 @@ export async function canAnalyzePortfolioAction(portfolioId: string) {
     // Check if there's an active analysis job
     const { data: activeJob } = await supabase
       .from("analysis_jobs")
-      .select("id, status")
+      .select("id, status, created_at, progress, error")
       .eq("portfolio_id", validatedData.portfolioId)
       .in("status", ["pending", "processing"])
       .order("created_at", { ascending: false })
       .limit(1);
 
     if (activeJob && activeJob.length > 0) {
+      const job = activeJob[0];
+      const jobAge = new Date().getTime() - new Date(job.created_at).getTime();
+      const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+      // If the job is older than 30 minutes, consider it stale and clean it up
+      if (jobAge > thirtyMinutes) {
+        await supabase
+          .from("analysis_jobs")
+          .update({
+            status: "failed",
+            error: "Job timed out",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", job.id);
+
+        // After cleaning up, analysis is now allowed
+        return {
+          success: true,
+          data: {
+            allowed: true,
+            message: "Portfolio is ready for analysis",
+          },
+          message: "Analysis allowed (stale job cleaned up)",
+        };
+      }
+
       return {
         success: true,
         data: {
@@ -309,7 +412,7 @@ export async function startPortfolioAnalysisAction(portfolioId: string) {
           .from("analysis_jobs")
           .update({
             status: "failed",
-            status_message:
+            error:
               "Trigger.dev SDK not available - analysis cannot be processed",
             updated_at: new Date().toISOString(),
           })
@@ -330,7 +433,7 @@ export async function startPortfolioAnalysisAction(portfolioId: string) {
         .from("analysis_jobs")
         .update({
           status: "failed",
-          status_message: `Failed to start analysis: ${triggerError.message}`,
+          error: `Failed to start analysis: ${triggerError.message}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", job.id);
@@ -388,7 +491,7 @@ export async function getPortfolioAnalysisResultsAction(portfolioId: string) {
     // Check for active analysis job
     const { data: activeJob } = await supabase
       .from("analysis_jobs")
-      .select("id, status, progress, status_message")
+      .select("id, status, progress, error")
       .eq("portfolio_id", validatedData.portfolioId)
       .in("status", ["pending", "processing"])
       .order("created_at", { ascending: false })
@@ -563,7 +666,7 @@ export async function startProjectAnalysisAction(projectId: string) {
           .from("analysis_jobs")
           .update({
             status: "failed",
-            status_message:
+            error:
               "Trigger.dev SDK not available - analysis cannot be processed",
             updated_at: new Date().toISOString(),
           })
@@ -584,7 +687,7 @@ export async function startProjectAnalysisAction(projectId: string) {
         .from("analysis_jobs")
         .update({
           status: "failed",
-          status_message: `Failed to start analysis: ${triggerError.message}`,
+          error: `Failed to start analysis: ${triggerError.message}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", job.id);
@@ -649,9 +752,10 @@ export async function getAnalysisJobStatusAction(jobId: string) {
         creator_id,
         status,
         progress,
-        status_message,
+        error,
         created_at,
         updated_at,
+        completed_at,
         creators!inner (
           profile_id
         )
@@ -685,9 +789,10 @@ export async function getAnalysisJobStatusAction(jobId: string) {
         project_id: job.project_id,
         status: job.status,
         progress: job.progress,
-        status_message: job.status_message,
+        error: job.error,
         created_at: job.created_at,
         updated_at: job.updated_at,
+        completed_at: job.completed_at,
       },
       message: "Job status retrieved successfully",
     };
@@ -1084,7 +1189,7 @@ export async function cancelAnalysisJobAction(jobId: string) {
       .from("analysis_jobs")
       .update({
         status: "cancelled",
-        status_message: "Cancelled by user",
+        error: "Cancelled by user",
         updated_at: new Date().toISOString(),
       })
       .eq("id", validatedData.jobId);

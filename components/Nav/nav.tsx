@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { getActiveNavigation } from "@/sanity/lib/queries";
 import { NavClient } from "./nav-client";
 
 export async function Nav() {
@@ -51,12 +52,22 @@ export async function Nav() {
     }
   }
 
+  // Fetch navigation content from Sanity
+  let navigationContent = null;
+  try {
+    navigationContent = await getActiveNavigation();
+  } catch (error) {
+    console.error("Error fetching navigation content:", error);
+    // Component will use fallback values if navigationContent is null
+  }
+
   // Pass server data to client component
   return (
     <NavClient
       initialUser={user}
       creatorUsername={creatorUsername}
       profile={profile}
+      navigationContent={navigationContent}
     />
   );
 }

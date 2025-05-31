@@ -13,7 +13,7 @@ export default async function FeedPage() {
       <h1 className="text-4xl font-bold mb-6">Browse Latest Work</h1>
 
       {/* Masonry grid of creator work */}
-      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-8 space-y-8">
+      <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-2 space-y-2">
         {creatorsWithProjects.length > 0 ? (
           creatorsWithProjects.map(({ creator, project }) => (
             <CreatorWorkCard

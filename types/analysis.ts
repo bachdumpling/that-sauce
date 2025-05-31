@@ -19,9 +19,10 @@ export interface AnalysisJob {
   creator_id: string;
   status: "pending" | "processing" | "completed" | "failed";
   progress: number;
-  status_message?: string;
+  error?: string | null;
   created_at: string;
   updated_at: string;
+  completed_at?: string | null;
 }
 
 export interface PortfolioAnalysisResponse {
@@ -32,7 +33,7 @@ export interface PortfolioAnalysisResponse {
     id: string;
     status: string;
     progress: number;
-    status_message?: string;
+    error?: string | null;
   };
 }
 

@@ -113,11 +113,10 @@ export function groupSearchResultsByCreator(
       }
     }
 
-    // Add video if present
+    // Add video if present - videos may have null url but have vimeo_id/youtube_id
     if (
       result.content_type === "video" &&
-      result.content_id &&
-      result.content_url
+      result.content_id
     ) {
       const existingVideo = project.videos.find(
         (vid) => vid.id === result.content_id
@@ -125,7 +124,7 @@ export function groupSearchResultsByCreator(
       if (!existingVideo) {
         project.videos.push({
           id: result.content_id,
-          url: result.content_url,
+          url: result.content_url, // Can be null for videos with vimeo_id/youtube_id
           title: result.content_title,
           description: result.content_description,
           youtube_id: result.youtube_id,
