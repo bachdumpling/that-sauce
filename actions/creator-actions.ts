@@ -95,8 +95,22 @@ export async function getCreatorAction(username: string) {
       first_name: data.profile?.first_name || null,
       last_name: data.profile?.last_name || null,
       // Check if the user is the owner by comparing profile_id with userId
+      // OR if the user is an admin (admin has owner-like privileges)
       isOwner: user?.id ? data.profile_id === user.id : false,
     };
+
+    // If user is logged in, check if they're an admin for additional privileges
+    if (user?.id && !creator.isOwner) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        creator.isOwner = true; // Grant admin the same privileges as owner
+      }
+    }
 
     delete creator.profile; // Remove the nested profile object
 
@@ -301,7 +315,23 @@ export async function updateCreatorProfileAction(
       return { success: false, error: "Creator not found" };
     }
 
-    if (existingCreator.profile_id !== user.id) {
+    // Check if user is the owner OR an admin
+    let isAuthorized = existingCreator.profile_id === user.id;
+
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       return { success: false, error: "Unauthorized" };
     }
 
@@ -417,15 +447,35 @@ export async function uploadCreatorAvatarAction(username: string, file: File) {
       redirect("/sign-in");
     }
 
-    // Verify ownership
+    // Verify ownership OR admin access
     const { data: creator, error: creatorError } = await supabase
       .from("creators")
       .select("id, profile_id")
       .eq("username", username)
       .single();
 
-    if (creatorError || !creator || creator.profile_id !== user.id) {
-      return { success: false, error: "Unauthorized or creator not found" };
+    if (creatorError || !creator) {
+      return { success: false, error: "Creator not found" };
+    }
+
+    // Check if user is the owner OR an admin
+    let isAuthorized = creator.profile_id === user.id;
+
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: "Unauthorized" };
     }
 
     // Upload file to Supabase Storage
@@ -499,15 +549,35 @@ export async function uploadCreatorBannerAction(username: string, file: File) {
       redirect("/sign-in");
     }
 
-    // Verify ownership
+    // Verify ownership OR admin access
     const { data: creator, error: creatorError } = await supabase
       .from("creators")
       .select("id, profile_id")
       .eq("username", username)
       .single();
 
-    if (creatorError || !creator || creator.profile_id !== user.id) {
-      return { success: false, error: "Unauthorized or creator not found" };
+    if (creatorError || !creator) {
+      return { success: false, error: "Creator not found" };
+    }
+
+    // Check if user is the owner OR an admin
+    let isAuthorized = creator.profile_id === user.id;
+
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: "Unauthorized" };
     }
 
     // Upload file to Supabase Storage

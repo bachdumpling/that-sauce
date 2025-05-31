@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/Nav/mobile-nav";
 import { Nav } from "@/components/Nav/nav";
 import { ProfileEditProvider } from "@/contexts/ProfileEditContext";
 import { Footer } from "@/components/Footer/Footer";
+import { Toaster } from "sonner";
 
 const defaultUrl = process.env.NEXT_PUBLIC_CLIENT_URL
   ? `https://${process.env.NEXT_PUBLIC_CLIENT_URL}`
@@ -111,12 +112,15 @@ export default function RootLayout({
                   </div>
                 </nav>
 
-                <main className="flex-1 w-full mx-auto px-8">{children}</main>
+                <main className="flex-1 w-full mx-auto px-0 sm:px-6 lg:px-8">
+                  {children}
+                </main>
 
                 <Footer />
               </div>
             </main>
             <Analytics />
+            <Toaster />
             {/* </ProgressBarProvider> */}
           </ProfileEditProvider>
         </ThemeProvider>

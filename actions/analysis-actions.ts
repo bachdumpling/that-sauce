@@ -851,8 +851,23 @@ export async function getCreatorAnalyticsAction(username: string) {
       };
     }
 
-    // Verify ownership
-    if (creator.profile_id !== user.id) {
+    // Verify ownership OR admin access
+    let hasAccess = creator.profile_id === user.id;
+
+    if (!hasAccess) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
       return {
         success: false,
         error: "Unauthorized",
@@ -1032,8 +1047,23 @@ export async function getProjectAnalyticsAction(projectId: string) {
       };
     }
 
-    // Verify ownership
-    if ((project.creators as any).profile_id !== user.id) {
+    // Verify ownership OR admin access
+    let hasAccess = (project.creators as any).profile_id === user.id;
+
+    if (!hasAccess) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        hasAccess = true;
+      }
+    }
+
+    if (!hasAccess) {
       return {
         success: false,
         error: "Unauthorized",

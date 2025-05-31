@@ -133,8 +133,21 @@ export async function getProjectWithMediaAction(projectId: string) {
       return { success: false, error: "Project not found" };
     }
 
-    // Check if user is the owner
-    const isOwner = user?.id === (project.creators as any).profile_id;
+    // Check if user is the owner OR an admin
+    let isOwner = user?.id === (project.creators as any).profile_id;
+
+    // If not the owner, check if user is an admin
+    if (!isOwner && user?.id) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isOwner = true; // Grant admin the same privileges as owner
+      }
+    }
 
     // Sort media by order (images) and created_at (videos)
     const sortedImages =
@@ -497,7 +510,7 @@ export async function deleteProjectAction(
       return { success: false, error: "Authentication required" };
     }
 
-    // Verify ownership
+    // Verify ownership OR admin access
     const { data: project } = await supabase
       .from("projects")
       .select(
@@ -517,9 +530,30 @@ export async function deleteProjectAction(
       userProfileId: user.id,
     });
 
-    if (!project || (project.creators as any).profile_id !== user.id) {
-      console.log("Ownership verification failed");
-      return { success: false, error: "Project not found or access denied" };
+    if (!project) {
+      console.log("Project not found");
+      return { success: false, error: "Project not found" };
+    }
+
+    // Check if user is the owner OR an admin
+    let isAuthorized = (project.creators as any).profile_id === user.id;
+
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      console.log("Authorization failed");
+      return { success: false, error: "Access denied" };
     }
 
     console.log("Starting cascade delete process...");
@@ -666,7 +700,7 @@ export async function updateProjectMediaOrderAction(
       return { success: false, error: "Authentication required" };
     }
 
-    // Verify ownership
+    // Verify ownership OR admin access
     const { data: project } = await supabase
       .from("projects")
       .select(
@@ -680,8 +714,28 @@ export async function updateProjectMediaOrderAction(
       .eq("id", projectId)
       .single();
 
-    if (!project || (project.creators as any).profile_id !== user.id) {
-      return { success: false, error: "Project not found or access denied" };
+    if (!project) {
+      return { success: false, error: "Project not found" };
+    }
+
+    // Check if user is the owner OR an admin
+    let isAuthorized = (project.creators as any).profile_id === user.id;
+
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return { success: false, error: "Access denied" };
     }
 
     // Update media order (only for images, videos don't have order column)

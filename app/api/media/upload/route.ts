@@ -89,11 +89,23 @@ async function verifyProjectOwnership(
     throw new Error("Project not found");
   }
 
-  if ((project.creators as any).profile_id !== userId) {
-    throw new Error("Access denied: You don't own this project");
+  // Check if user is the owner
+  if ((project.creators as any).profile_id === userId) {
+    return project;
   }
 
-  return project;
+  // If not the owner, check if user is an admin
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (!profileError && profile?.role === "admin") {
+    return project; // Admin has access
+  }
+
+  throw new Error("Access denied: You don't own this project");
 }
 
 /**

@@ -1,37 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { successResponse, errorResponse, unauthorizedResponse, validationErrorResponse, serverErrorResponse, notFoundResponse } from "@/lib/api-utils/response";
+import {
+  successResponse,
+  errorResponse,
+  unauthorizedResponse,
+  validationErrorResponse,
+  serverErrorResponse,
+  notFoundResponse,
+} from "@/lib/api-utils/response";
 
-function validateFileType(file: File): { isValid: boolean; type: "image" | "video" | null; error?: string } {
-  const allowedImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-  const allowedVideoTypes = ["video/mp4", "video/mov", "video/avi", "video/wmv", "video/webm"];
-  
+function validateFileType(file: File): {
+  isValid: boolean;
+  type: "image" | "video" | null;
+  error?: string;
+} {
+  const allowedImageTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+  const allowedVideoTypes = [
+    "video/mp4",
+    "video/mov",
+    "video/avi",
+    "video/wmv",
+    "video/webm",
+  ];
+
   if (allowedImageTypes.includes(file.type)) {
     return { isValid: true, type: "image" };
   }
-  
+
   if (allowedVideoTypes.includes(file.type)) {
     return { isValid: true, type: "video" };
   }
-  
-  return { 
-    isValid: false, 
-    type: null, 
-    error: `Unsupported file type: ${file.type}. Supported types: ${[...allowedImageTypes, ...allowedVideoTypes].join(", ")}` 
+
+  return {
+    isValid: false,
+    type: null,
+    error: `Unsupported file type: ${file.type}. Supported types: ${[...allowedImageTypes, ...allowedVideoTypes].join(", ")}`,
   };
 }
 
-async function verifyProjectOwnership(supabase: any, projectId: string, userId: string) {
+async function verifyProjectOwnership(
+  supabase: any,
+  projectId: string,
+  userId: string
+) {
   const { data: project, error } = await supabase
     .from("projects")
-    .select(`
+    .select(
+      `
       id,
       creator_id,
       creators!inner (
         id,
         profile_id
       )
-    `)
+    `
+    )
     .eq("id", projectId)
     .single();
 
@@ -39,11 +67,23 @@ async function verifyProjectOwnership(supabase: any, projectId: string, userId: 
     throw new Error("Project not found");
   }
 
-  if ((project.creators as any).profile_id !== userId) {
-    throw new Error("Access denied: You don't own this project");
+  // Check if user is the owner
+  if ((project.creators as any).profile_id === userId) {
+    return project;
   }
 
-  return project;
+  // If not the owner, check if user is an admin
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (!profileError && profile?.role === "admin") {
+    return project; // Admin has access
+  }
+
+  throw new Error("Access denied: You don't own this project");
 }
 
 /**
@@ -53,8 +93,11 @@ async function verifyProjectOwnership(supabase: any, projectId: string, userId: 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return unauthorizedResponse();
     }
@@ -97,7 +140,10 @@ export async function POST(request: NextRequest) {
         // Check file size
         const maxSize = 50 * 1024 * 1024;
         if (file.size > maxSize) {
-          errors.push({ file: file.name, error: "File size exceeds 50MB limit" });
+          errors.push({
+            file: file.name,
+            error: "File size exceeds 50MB limit",
+          });
           continue;
         }
 
@@ -173,13 +219,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return successResponse({
-      uploaded: results,
-      errors,
-      total: files.length,
-      successful: results.length,
-      failed: errors.length,
-    }, `Uploaded ${results.length}/${files.length} files successfully`);
+    return successResponse(
+      {
+        uploaded: results,
+        errors,
+        total: files.length,
+        successful: results.length,
+        failed: errors.length,
+      },
+      `Uploaded ${results.length}/${files.length} files successfully`
+    );
   } catch (error: any) {
     if (error.message.includes("Project not found")) {
       return notFoundResponse("Project");
@@ -198,8 +247,11 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return unauthorizedResponse();
     }
@@ -285,13 +337,16 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    return successResponse({
-      deleted: results,
-      errors,
-      total: media_ids.length,
-      successful: results.length,
-      failed: errors.length,
-    }, `Deleted ${results.length}/${media_ids.length} media items`);
+    return successResponse(
+      {
+        deleted: results,
+        errors,
+        total: media_ids.length,
+        successful: results.length,
+        failed: errors.length,
+      },
+      `Deleted ${results.length}/${media_ids.length} media items`
+    );
   } catch (error: any) {
     if (error.message.includes("Project not found")) {
       return notFoundResponse("Project");
@@ -301,4 +356,4 @@ export async function DELETE(request: NextRequest) {
     }
     return serverErrorResponse(error);
   }
-} 
+}

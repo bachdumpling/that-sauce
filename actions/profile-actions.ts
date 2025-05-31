@@ -197,8 +197,23 @@ export async function updateCreatorProfileAction(
       };
     }
 
-    // Verify ownership
-    if (creator.profile_id !== user.id) {
+    // Verify ownership OR admin access
+    let isAuthorized = creator.profile_id === user.id;
+    
+    if (!isAuthorized) {
+      // Check if user is an admin
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (!profileError && profile?.role === "admin") {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
       return {
         success: false,
         error: "Unauthorized",
@@ -363,7 +378,33 @@ export async function uploadProfileAvatarAction(file: File, username?: string) {
         .eq("username", username)
         .single();
 
-      if (creatorError || !creator || creator.profile_id !== user.id) {
+      if (creatorError || !creator) {
+        // Clean up uploaded file
+        await supabase.storage.from("media").remove([filePath]);
+        return {
+          success: false,
+          error: "Creator not found",
+          message: "Creator profile not found",
+        };
+      }
+
+      // Check if user is the owner OR an admin
+      let isAuthorized = creator.profile_id === user.id;
+      
+      if (!isAuthorized) {
+        // Check if user is an admin
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        if (!profileError && profile?.role === "admin") {
+          isAuthorized = true;
+        }
+      }
+
+      if (!isAuthorized) {
         // Clean up uploaded file
         await supabase.storage.from("media").remove([filePath]);
         return {
