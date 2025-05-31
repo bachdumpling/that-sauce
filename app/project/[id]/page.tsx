@@ -1,10 +1,8 @@
-import { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProjectDetail } from "../components/project-detail";
 import { getProjectByIdAction } from "@/actions/project-actions";
-import { BackButton } from "@/components/back-button";
 import { getCreatorAction } from "@/actions/creator-actions";
 
 interface ProjectPageProps {

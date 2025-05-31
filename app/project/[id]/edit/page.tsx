@@ -2,7 +2,6 @@ import React from "react";
 import EditProjectForm from "../../components/edit-project-form";
 import { getProjectByIdAction } from "@/actions/project-actions";
 import { getCreatorAction } from "@/actions/creator-actions";
-import { ProjectDetail } from "../../components/project-detail";
 import { redirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 

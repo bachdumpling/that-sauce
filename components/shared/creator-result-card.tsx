@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MapPin, X, Play, Sparkles, CheckCircle2 } from "lucide-react";
+import { MapPin, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SearchResult } from "@/components/shared/types";
+import { CreatorWithContent, MediaContent } from "@/types/search";
 import Image from "next/image";
 import { VimeoEmbed, YouTubeEmbed } from "@/components/ui/vimeo-embed";
 import { ImageLightbox } from "@/components/shared/image-lightbox";
@@ -18,11 +18,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { User } from "@/components/shared/types";
 import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
-import { ContentItem } from "@/components/shared/types";
 
-const mockContent: ContentItem[][] = [
+// Define the User interface locally since it's not in main types
+interface User {
+  id?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  company?: string;
+}
+
+const mockContent: MediaContent[][] = [
   // Group 1
   [
     {
@@ -168,7 +175,7 @@ const mockContent: ContentItem[][] = [
 ];
 
 interface CreatorResultCardProps {
-  creator: SearchResult;
+  creator: CreatorWithContent;
   role: string;
   user: User;
   creatorIndex?: number;
@@ -185,11 +192,51 @@ export function CreatorResultCard({
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [messageContent, setMessageContent] = useState("");
-  const creatorUsername = creator.profile?.username || "Creator";
+  const creatorUsername = creator.creator?.username || "Creator";
 
   // Use the creator index to determine which mockContent array to use
   const contentIndex = creatorIndex % mockContent.length;
   const creatorContent = mockContent[contentIndex];
+
+  // Transform projects data into content array for display
+  const creatorProjectContent: MediaContent[] = [];
+  if (creator.projects && Array.isArray(creator.projects)) {
+    creator.projects.forEach((project) => {
+      // Add images
+      if (project.images && Array.isArray(project.images)) {
+        project.images.forEach((image) => {
+          creatorProjectContent.push({
+            id: image.id,
+            type: "image",
+            url: image.url,
+            title: image.alt_text,
+            description: project.description,
+            project_id: project.id,
+            project_title: project.title,
+            alt_text: image.alt_text,
+            order: image.order,
+          });
+        });
+      }
+
+      // Add videos
+      if (project.videos && Array.isArray(project.videos)) {
+        project.videos.forEach((video) => {
+          creatorProjectContent.push({
+            id: video.id,
+            type: "video",
+            url: video.url,
+            title: video.title || project.title,
+            description: video.description || project.description,
+            project_id: project.id,
+            project_title: project.title,
+            youtube_id: video.youtube_id,
+            vimeo_id: video.vimeo_id,
+          });
+        });
+      }
+    });
+  }
 
   // Default user values to handle cases where user prop might be missing
   const firstName = user?.first_name || "Your";
@@ -245,8 +292,8 @@ ${company}`;
                 {/* Placeholder avatar */}
                 <div className="h-full w-full bg-gray-300 flex items-center justify-center">
                   <span className="text-gray-600 font-bold text-xl">
-                    {creator.profile && creator.profile.username
-                      ? creator.profile.username.charAt(0).toUpperCase()
+                    {creator.creator && creator.creator.username
+                      ? creator.creator.username.charAt(0).toUpperCase()
                       : "C"}
                   </span>
                 </div>
@@ -254,14 +301,14 @@ ${company}`;
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row items-center gap-4">
                   <h2 className="text-xl font-bold">
-                    {creator.profile && creator.profile.username
-                      ? creator.profile.username
+                    {creator.creator && creator.creator.username
+                      ? creator.creator.username
                       : "Creator"}
                   </h2>
                   <span className="text-base text-gray-500">
                     @
-                    {creator.profile && creator.profile.username
-                      ? creator.profile.username.toLowerCase()
+                    {creator.creator && creator.creator.username
+                      ? creator.creator.username.toLowerCase()
                       : "creator"}
                   </span>
                 </div>
@@ -270,17 +317,17 @@ ${company}`;
                   <span className="px-4 py-1 border rounded-full text-sm bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                     {role}
                   </span>
-                  {creator.profile && creator.profile.location && (
+                  {creator.creator && creator.creator.location && (
                     <div className="flex items-center gap-1 text-sm text-gray-500">
                       <MapPin className="h-4 w-4" />
-                      <span>{creator.profile.location}</span>
+                      <span>{creator.creator.location}</span>
                     </div>
                   )}
                   <div className="flex gap-4">
                     {/* Social icons - only show platforms from our supported list */}
-                    {creator.profile &&
-                      creator.profile.social_links &&
-                      Object.entries(creator.profile.social_links)
+                    {creator.creator &&
+                      creator.creator.social_links &&
+                      Object.entries(creator.creator.social_links)
                         .filter(([platform]) =>
                           validSocialPlatforms.includes(platform.toLowerCase())
                         )
@@ -309,15 +356,15 @@ ${company}`;
           <div className="flex flex-row justify-center items-center h-full w-fit gap-2 mt-2">
             <Link
               href={
-                creator.profile && creator.profile.username
-                  ? `/${creator.profile.username}`
+                creator.creator && creator.creator.username
+                  ? `/${creator.creator.username}`
                   : "#"
               }
             >
               <Button
                 variant="outline"
                 className=" rounded-full px-8 py-6"
-                disabled={!creator.profile || !creator.profile.username}
+                disabled={!creator.creator || !creator.creator.username}
               >
                 View Profile
               </Button>
@@ -336,8 +383,8 @@ ${company}`;
         {/* Creator projects column */}
         <div className="col-span-2">
           <div className="grid grid-cols-5 gap-4 h-[160px]">
-            {creator.content && creator.content.length > 0 ? (
-              creator.content.slice(0, 5).map((content, index) => (
+            {creatorProjectContent && creatorProjectContent.length > 0 ? (
+              creatorProjectContent.slice(0, 5).map((content, index) => (
                 <div key={content.id} className="flex items-end h-full">
                   {content.type === "video" ? (
                     <div className="w-full bg-black overflow-hidden max-h-[200px]">
@@ -379,7 +426,7 @@ ${company}`;
                         height={0}
                         sizes="100vw"
                         className="cursor-pointer w-full object-cover object-bottom"
-                        onClick={() => handleImageClick(content.url)}
+                        onClick={() => handleImageClick(content.url!)}
                         style={{
                           display: "block",
                           maxHeight: "100%",

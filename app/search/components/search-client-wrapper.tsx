@@ -1,30 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import {
   Search,
   X,
-  Video,
-  FilterX,
   Upload,
-  Filter,
   ArrowUpRight,
   Sparkles,
   Loader2,
-  RotateCcw,
-  Info,
   FileText,
   DollarSign,
   History,
-  ArrowRight,
-  Zap,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  MapPin,
-  Clock,
-  Image as ImageIcon,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -40,14 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { DropzoneInput } from "@/components/ui/dropzone-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
 import * as React from "react";
 import {
   Popover,
@@ -57,10 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
-import {
-
-  SearchResponse,
-} from "@/types/search";
+import { SearchResponse } from "@/types/search";
 
 interface SearchResults {
   success: boolean;

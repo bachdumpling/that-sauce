@@ -1,39 +1,41 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SocialIcon } from "@/components/ui/social-icon";
-import { VimeoEmbed, YouTubeEmbed } from "@/components/ui/vimeo-embed";
-import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
-import {
-  Globe,
-  MapPin,
-  Image as ImageIcon,
-  Video,
-  ExternalLink,
-  ChevronLeft,
-  ChevronRight,
-  Edit,
-  Plus,
-  Trash2,
-  MessageCircle,
-  Phone,
-} from "lucide-react";
-import {
-  Creator,
-  Project,
-  Image as ImageType,
-  Video as VideoType,
-  ViewMode,
-} from "@/components/shared/types";
+import { Image as ImageIcon, Plus } from "lucide-react";
+import { Creator, Project } from "@/types";
+
+// Define local types that aren't in main types
+interface Image {
+  id: string;
+  url: string;
+  alt_text?: string;
+  resolutions?: {
+    high_res?: string;
+    low_res?: string;
+  };
+}
+
+interface Video {
+  id: string;
+  title?: string;
+  vimeo_id?: string;
+  youtube_id?: string;
+  url?: string;
+  description?: string;
+}
 
 interface OverviewProps {
-  creator: Creator;
+  creator: Creator & {
+    projects?: Array<
+      Project & {
+        images?: Image[];
+        videos?: Video[];
+      }
+    >;
+    isOwner?: boolean;
+  };
 }
 
 // Helper function to shuffle an array (Fisher-Yates shuffle)
@@ -56,9 +58,9 @@ export function Overview({ creator }: OverviewProps) {
           <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
             {creator.projects.map((project) => {
               // Filter images with a valid URL and shuffle them
-              const availableImages =
+              const availableImages: Image[] =
                 project.images?.filter(
-                  (img) =>
+                  (img: Image) =>
                     img.url ||
                     img.resolutions?.high_res ||
                     img.resolutions?.low_res
@@ -70,7 +72,7 @@ export function Overview({ creator }: OverviewProps) {
                 <div key={project.id}>
                   {selectedImages.length > 0 ? (
                     // Map over the selected images and render them
-                    selectedImages.map((image, index) => (
+                    selectedImages.map((image: Image, index: number) => (
                       <div
                         key={image.id || index}
                         className="overflow-hidden rounded-lg bg-gray-100 break-inside-avoid mb-4 relative block"

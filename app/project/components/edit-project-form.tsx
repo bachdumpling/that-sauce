@@ -3,11 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-// Import server actions
 import {
   updateProjectAction,
   getProjectByIdAction,
-  deleteProjectAction,
 } from "@/actions/project-actions";
 import { getOrganizationsAction } from "@/actions/organization-actions";
 import {
@@ -21,7 +19,6 @@ import {
   ProjectImage,
   ProjectVideo,
 } from "@/types/project";
-import { CREATOR_ROLES } from "@/lib/constants/creator-options";
 import MediaUploadStep from "./new-project-steps/media-upload-step";
 import ProjectDetailsStep from "./new-project-steps/project-details-step";
 import { Loader2, ImageIcon } from "lucide-react";

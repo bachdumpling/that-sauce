@@ -4,11 +4,9 @@ import "@/styles/nprogress-custom.css";
 import { Analytics } from "@vercel/analytics/react";
 import localFont from "next/font/local";
 import { MobileNav } from "@/components/Nav/mobile-nav";
-import { ProgressBar } from "@/components/ProgressBar";
-import { ProgressBarProvider } from "@/providers/ProgressBarProvider";
 import { Nav } from "@/components/Nav/nav";
 import { ProfileEditProvider } from "@/contexts/ProfileEditContext";
-import { Footer } from "@/components/Footer";
+import { Footer } from "@/components/Footer/Footer";
 
 const defaultUrl = process.env.NEXT_PUBLIC_CLIENT_URL
   ? `https://${process.env.NEXT_PUBLIC_CLIENT_URL}`

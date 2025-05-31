@@ -11,10 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { VimeoEmbed, YouTubeEmbed } from "@/components/ui/vimeo-embed";
-import { Edit, Trash2 } from "lucide-react";
 import { Project, Creator } from "@/types";
 import { ProjectImage, ProjectVideo } from "@/types/project";
 import {

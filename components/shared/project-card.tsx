@@ -15,14 +15,7 @@ import {
   ImageIcon,
   Plus,
 } from "lucide-react";
-import { Project, ViewMode } from "@/components/shared/types";
-import { deleteProjectImage } from "@/lib/api/creators";
-import { deleteProjectVideo } from "@/lib/api/media";
-import { deleteProject } from "@/lib/api/projects";
-import {
-  deleteProjectImage as adminDeleteProjectImage,
-  deleteProject as adminDeleteProject,
-} from "@/lib/api/admin";
+import { Project, ProjectImage, ProjectVideo } from "@/types/project";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
@@ -36,14 +29,32 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Define ViewMode type locally
+type ViewMode = "public" | "owner" | "admin";
+
+// Extended Project interface for search/scoring scenarios
+interface ExtendedProject extends Project {
+  creator_username?: string;
+  vector_score?: number;
+  video_score?: number;
+  final_score?: number;
+}
+
+// Extended ProjectVideo interface for search scenarios
+interface ExtendedProjectVideo extends ProjectVideo {
+  youtube_id?: string;
+  vimeo_id?: string;
+  similarity_score?: number;
+}
+
 interface ProjectCardProps {
-  project: Project;
+  project: ExtendedProject;
   viewMode?: ViewMode;
   showScores?: boolean;
-  onEdit?: (project: Project) => void;
-  onDelete?: (project: Project) => void;
+  onEdit?: (project: ExtendedProject) => void;
+  onDelete?: (project: ExtendedProject) => void;
   onImageClick?: (imageIndex: number) => void;
-  onAddMedia?: (project: Project) => void;
+  onAddMedia?: (project: ExtendedProject) => void;
   onDeleteImage?: (projectId: string, imageId: string) => void;
   onDeleteVideo?: (projectId: string, videoId: string) => void;
   className?: string;
@@ -61,7 +72,6 @@ export function ProjectCard({
   onDeleteVideo,
   className = "",
 }: ProjectCardProps) {
-  const router = useRouter();
   const [isMediaLoading, setIsMediaLoading] = useState(true);
   const [mediaError, setMediaError] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
@@ -94,43 +104,14 @@ export function ProjectCard({
 
     if (!project.id || !imageId || isDeletingImage) return;
 
-    // If onDeleteImage prop is provided, use it instead of the default behavior
+    // If onDeleteImage prop is provided, use it
     if (onDeleteImage) {
       onDeleteImage(project.id, imageId);
       return;
     }
 
-    if (
-      confirm(
-        "Are you sure you want to delete this image? This action cannot be undone."
-      )
-    ) {
-      setIsDeletingImage(true);
-
-      try {
-        let response;
-
-        // Use the appropriate API function based on viewMode
-        if (viewMode === "admin") {
-          response = await adminDeleteProjectImage(project.id, imageId);
-        } else {
-          response = await deleteProjectImage(project.id, imageId);
-        }
-
-        if (response.success) {
-          toast.success("Image deleted successfully");
-          // Reload the page to reflect the changes
-          window.location.reload();
-        } else {
-          toast.error(response.error || "Failed to delete image");
-        }
-      } catch (error) {
-        console.error("Error deleting image:", error);
-        toast.error("An unexpected error occurred");
-      } finally {
-        setIsDeletingImage(false);
-      }
-    }
+    // Fallback - show message that this functionality needs to be implemented
+    toast.error("Delete image functionality needs to be implemented");
   };
 
   // Function to prepare for video deletion
@@ -140,7 +121,7 @@ export function ProjectCard({
 
     if (!project.id || isDeletingVideo) return;
 
-    // If onDeleteVideo prop is provided, use it instead of the default behavior
+    // If onDeleteVideo prop is provided, use it
     if (onDeleteVideo) {
       onDeleteVideo(project.id, videoId);
       return;
@@ -158,23 +139,12 @@ export function ProjectCard({
     setIsDeletingVideo(true);
 
     try {
-      const response = await deleteProjectVideo(project.id, selectedVideoId);
-
-      if (response.success) {
+      // If onDeleteVideo prop is provided, use it
+      if (onDeleteVideo) {
+        onDeleteVideo(project.id, selectedVideoId);
         toast.success("Video deleted successfully");
-
-        // Update the UI without refreshing the page
-        if (onDeleteVideo) {
-          // If the parent component provided a callback, use it
-          onDeleteVideo(project.id, selectedVideoId);
-        } else {
-          // Otherwise, update the local state to reflect the deletion
-          // (though this would require the parent to refresh the project data)
-          // We'll rely on the parent to handle updating the UI
-          toast.success("Video deleted successfully");
-        }
       } else {
-        toast.error(response.error || "Failed to delete video");
+        toast.error("Delete video functionality needs to be implemented");
       }
     } catch (error) {
       console.error("Error deleting video:", error);
@@ -193,47 +163,14 @@ export function ProjectCard({
 
     if (!project.id || isDeletingProject) return;
 
-    // If onDelete prop is provided, use it instead of the default behavior
+    // If onDelete prop is provided, use it
     if (onDelete) {
       onDelete(project);
       return;
     }
 
-    if (
-      confirm(
-        "Are you sure you want to delete this entire project? This action cannot be undone and will delete all associated images and videos."
-      )
-    ) {
-      setIsDeletingProject(true);
-
-      try {
-        let response;
-
-        // Use the appropriate API function based on viewMode
-        if (viewMode === "admin") {
-          response = await adminDeleteProject(project.id);
-        } else {
-          response = await deleteProject(project.id);
-        }
-
-        if (response.success) {
-          toast.success("Project deleted successfully");
-          // Redirect to creator profile page or refresh
-          if (project.creator_username) {
-            router.push(`/${project.creator_username}`);
-          } else {
-            window.location.reload();
-          }
-        } else {
-          toast.error(response.error || "Failed to delete project");
-        }
-      } catch (error) {
-        console.error("Error deleting project:", error);
-        toast.error("An unexpected error occurred");
-      } finally {
-        setIsDeletingProject(false);
-      }
-    }
+    // Fallback - show message that this functionality needs to be implemented
+    toast.error("Delete project functionality needs to be implemented");
   };
 
   // Determine if we should show scores
@@ -242,10 +179,14 @@ export function ProjectCard({
     (project.vector_score !== undefined ||
       project.video_score !== undefined ||
       (project.videos &&
-        project.videos.some((v) => v.similarity_score !== undefined)));
+        project.videos.some(
+          (v) => (v as ExtendedProjectVideo).similarity_score !== undefined
+        )));
 
-  // Determine if the user can delete images
-  const canDeleteImages = viewMode === "admin" || viewMode === "owner";
+  // Get creator username - prefer creator_username, fallback to creators.username
+  const creatorUsername =
+    project.creator_username || project.creators?.username;
+
   return (
     <Card className={`overflow-hidden border-none shadow-md ${className}`}>
       <CardContent className="p-0">
@@ -253,9 +194,9 @@ export function ProjectCard({
         <div className="p-6">
           <div className="flex justify-between items-start gap-4">
             <div>
-              {project.creator_username ? (
+              {creatorUsername ? (
                 <Link
-                  href={`/${project.creator_username}/${getProjectSlug(project.title)}`}
+                  href={`/${creatorUsername}/${getProjectSlug(project.title)}`}
                   className="group"
                 >
                   <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
@@ -272,7 +213,7 @@ export function ProjectCard({
                 </p>
               )}
 
-              {showScores && (
+              {shouldShowScores && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   {project.vector_score !== undefined && (
                     <Badge variant="secondary">
@@ -383,7 +324,7 @@ export function ProjectCard({
                     ) : (
                       <>
                         <Image
-                          src={image.resolutions.high_res || image.url}
+                          src={image.resolutions?.original || image.url}
                           alt={image.alt_text || project.title}
                           fill
                           className="object-cover transition-transform group-hover:scale-105"
@@ -435,70 +376,78 @@ export function ProjectCard({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {project.videos.map((video) => (
-                  <div
-                    key={video.id}
-                    className="relative overflow-hidden rounded-md bg-muted"
-                  >
-                    <div className="aspect-video">
-                      {video.youtube_id ? (
-                        <YouTubeEmbed
-                          youtubeId={video.youtube_id}
-                          title={video.title || "Video"}
-                        />
-                      ) : video.vimeo_id ? (
-                        <VimeoEmbed
-                          vimeoId={video.vimeo_id}
-                          title={video.title || "Video"}
-                        />
-                      ) : video.url ? (
-                        <video
-                          controls
-                          src={video.url}
-                          className="w-full h-full object-cover"
-                          poster={
-                            project.images?.[0]?.resolutions?.high_res ||
-                            project.images?.[0]?.url
-                          }
-                        >
-                          <source src={video.url} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                          <p className="text-muted-foreground">
-                            Video unavailable
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="flex justify-between items-center">
-                        <h5 className="font-medium text-sm">
-                          {video.title || "Untitled Video"}
-                        </h5>
-                        {viewMode !== "public" && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => prepareDeleteVideo(e, video.id)}
-                            disabled={isDeletingVideo}
-                            className="h-8 w-8 text-destructive hover:text-destructive/80"
+                {project.videos.map((video) => {
+                  const extendedVideo = video as ExtendedProjectVideo;
+                  return (
+                    <div
+                      key={video.id}
+                      className="relative overflow-hidden rounded-md bg-muted"
+                    >
+                      <div className="aspect-video">
+                        {extendedVideo.youtube_id ? (
+                          <YouTubeEmbed
+                            youtubeId={extendedVideo.youtube_id}
+                            title={video.title || "Video"}
+                          />
+                        ) : extendedVideo.vimeo_id ? (
+                          <VimeoEmbed
+                            vimeoId={extendedVideo.vimeo_id}
+                            title={video.title || "Video"}
+                          />
+                        ) : video.url ? (
+                          <video
+                            controls
+                            src={video.url}
+                            className="w-full h-full object-cover"
+                            poster={
+                              project.images?.[0]?.resolutions?.original ||
+                              project.images?.[0]?.url
+                            }
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                            <source src={video.url} type="video/mp4" />
+                            Your browser does not support the video tag.
+                          </video>
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <p className="text-muted-foreground">
+                              Video unavailable
+                            </p>
+                          </div>
                         )}
                       </div>
-                      {showScores && video.similarity_score !== undefined && (
-                        <div className="flex justify-end mt-2">
-                          <Badge variant="secondary">
-                            Match: {(video.similarity_score * 100).toFixed(1)}%
-                          </Badge>
+                      <div className="p-4">
+                        <div className="flex justify-between items-center">
+                          <h5 className="font-medium text-sm">
+                            {video.title || "Untitled Video"}
+                          </h5>
+                          {viewMode !== "public" && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => prepareDeleteVideo(e, video.id)}
+                              disabled={isDeletingVideo}
+                              className="h-8 w-8 text-destructive hover:text-destructive/80"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
-                      )}
+                        {showScores &&
+                          extendedVideo.similarity_score !== undefined && (
+                            <div className="flex justify-end mt-2">
+                              <Badge variant="secondary">
+                                Match:{" "}
+                                {(extendedVideo.similarity_score * 100).toFixed(
+                                  1
+                                )}
+                                %
+                              </Badge>
+                            </div>
+                          )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

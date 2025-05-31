@@ -6,11 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardHeader,
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Edit, Trash2, Globe, MapPin, Plus, MessageCircle } from "lucide-react";
+import { Edit, Trash2, Globe, Plus, MessageCircle } from "lucide-react";
 import { Project, Creator } from "@/types";
 import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
 import { SocialIcon } from "@/components/ui/social-icon";

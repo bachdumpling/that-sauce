@@ -1,18 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { VimeoEmbed, YouTubeEmbed } from "@/components/ui/vimeo-embed";
-import { MultiSelect, Option } from "@/components/ui/multi-select";
+import { Option } from "@/components/ui/multi-select";
 import { ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,7 +18,6 @@ import { toast } from "sonner";
 import {
   createProjectAction,
   updateProjectAction,
-  getProjectByIdAction,
   deleteProjectAction,
 } from "@/actions/project-actions";
 import { getOrganizationsAction } from "@/actions/organization-actions";

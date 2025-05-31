@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin } from "lucide-react";
-import { SocialIcon } from "@/components/ui/social-icon";
-import { SOCIAL_PLATFORMS } from "@/lib/constants/creator-options";
-import { Creator } from "@/components/shared/types";
+import { Creator } from "@/types/creator";
 import { usePathname } from "next/navigation";
 
 interface TabsNavProps {

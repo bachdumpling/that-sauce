@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, X, DollarSign } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { search } from "@/lib/api/search";
-import { CreatorWithContent, SearchResponse } from "@/types/search";
-import { SearchResult, ContentItem } from "@/components/shared/types";
+import { SearchResponse } from "@/types/search";
 import { CreatorResultCard } from "@/components/shared/creator-result-card";
 import { Filter } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
@@ -75,82 +74,6 @@ export function SearchResultsClient({
     };
     getUser();
   }, []);
-
-  // Transform CreatorWithContent to SearchResult format for the CreatorResultCard
-  const transformToSearchResult = (
-    creatorWithContent: CreatorWithContent
-  ): SearchResult => {
-    // Safety checks
-    if (!creatorWithContent) {
-      console.error(
-        "transformToSearchResult: creatorWithContent is null/undefined"
-      );
-      throw new Error("Invalid search result data");
-    }
-
-    if (!creatorWithContent.creator) {
-      console.error(
-        "transformToSearchResult: creatorWithContent.creator is null/undefined",
-        creatorWithContent
-      );
-      throw new Error("Invalid creator data in search result");
-    }
-
-    const content: ContentItem[] = [];
-
-    // Add all images and videos from all projects
-    if (
-      creatorWithContent.projects &&
-      Array.isArray(creatorWithContent.projects)
-    ) {
-      creatorWithContent.projects.forEach((project) => {
-        // Add images
-        if (project.images && Array.isArray(project.images)) {
-          project.images.forEach((image) => {
-            content.push({
-              id: image.id,
-              type: "image",
-              url: image.url,
-              title: image.alt_text,
-              description: project.description,
-              project_id: project.id,
-              project_title: project.title,
-            });
-          });
-        }
-
-        // Add videos
-        if (project.videos && Array.isArray(project.videos)) {
-          project.videos.forEach((video) => {
-            content.push({
-              id: video.id,
-              type: "video",
-              url: video.url,
-              title: video.title || project.title,
-              description: video.description || project.description,
-              project_id: project.id,
-              project_title: project.title,
-              youtube_id: video.youtube_id,
-              vimeo_id: video.vimeo_id,
-            });
-          });
-        }
-      });
-    }
-
-    return {
-      profile: {
-        id: creatorWithContent.creator.id,
-        username: creatorWithContent.creator.username,
-        location: creatorWithContent.creator.location,
-        bio: creatorWithContent.creator.bio,
-        // Convert verification_status to primary_role array if needed
-        primary_role: role ? [role] : undefined,
-      },
-      score: creatorWithContent.total_score,
-      content,
-    };
-  };
 
   // Initial search when component mounts
   useEffect(() => {
@@ -420,7 +343,7 @@ export function SearchResultsClient({
               return (
                 <CreatorResultCard
                   key={creatorWithContent.creator.id}
-                  creator={transformToSearchResult(creatorWithContent)}
+                  creator={creatorWithContent}
                   role={role}
                   user={user}
                   creatorIndex={index}
