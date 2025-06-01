@@ -1,7 +1,4 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import WaitlistForm from "./WaitlistForm";
 
 export default function Hero() {
   return (
@@ -14,9 +11,10 @@ export default function Hero() {
           Discover creative professionals based on their style, experience, and
           portfolio using our AI-powered search platform.
         </p>
-        <Button size="lg" asChild>
-          <Link href="/search">Start Searching</Link>
-        </Button>
+
+        <div className="w-full max-w-md mb-6">
+          <WaitlistForm />
+        </div>
       </div>
     </div>
   );
