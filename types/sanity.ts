@@ -102,3 +102,57 @@ export interface LayoutContent {
   navigation: NavigationContent;
   footer: FooterContent;
 }
+
+// Landing Page Types
+export interface LandingPageData {
+  _id: string;
+  title: string;
+  slug: {
+    current: string;
+  };
+  hero: {
+    title: string;
+    subtitle: string;
+    backgroundVideo?: {
+      asset: {
+        _id: string;
+        url: string;
+        mimeType: string;
+        size: number;
+      };
+    };
+    backgroundImage?: {
+      asset: {
+        _id: string;
+        url: string;
+        metadata: {
+          dimensions: {
+            width: number;
+            height: number;
+          };
+        };
+      };
+      alt: string;
+    };
+    videoSettings?: {
+      autoplay: boolean;
+      loop: boolean;
+      muted: boolean;
+    };
+    textColor?: "white" | "black" | "primary";
+    overlay?: {
+      enabled: boolean;
+      color?: string;
+      customColor?: string;
+    };
+  };
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    ogImage?: {
+      asset: {
+        url: string;
+      };
+    };
+  };
+}

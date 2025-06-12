@@ -47,7 +47,6 @@ export function NavClient({
   const router = useRouter();
   const supabase = createClient();
   const { theme } = useTheme();
-
   // Function to handle sign out
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -381,6 +380,10 @@ export function NavClient({
               width={content.brand.logoWidth || 200}
               height={content.brand.logoHeight || 200}
               priority
+              logoLight={content.brand.logoLight || undefined}
+              logoDark={content.brand.logoDark || undefined}
+              logoDefault={content.brand.logoDefault || undefined}
+              brandName={content.brand.brandName}
             />
           )}
         </Link>
@@ -560,6 +563,10 @@ export function NavClient({
               width={content.brand.logoWidth || 200}
               height={content.brand.logoHeight || 200}
               priority
+              logoLight={content.brand.logoLight || undefined}
+              logoDark={content.brand.logoDark || undefined}
+              logoDefault={content.brand.logoDefault || undefined}
+              brandName={content.brand.brandName}
             />
           )}
         </Link>
@@ -582,7 +589,7 @@ export function NavClient({
             {content.authNavigation.signUpText}
           </Link>
         </Button>
-        <ThemeSwitcher />
+        {/* <ThemeSwitcher /> */}
       </div>
     </div>
   );

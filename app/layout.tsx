@@ -92,33 +92,24 @@ export default function RootLayout({
       <body className="bg-background text-foreground font-sans">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
           <ProfileEditProvider>
-            {/* <ProgressBarProvider> */}
-            <main className="min-h-screen flex flex-col items-center">
-              <div className="flex-1 w-full flex flex-col gap-10 items-center">
-                <nav className="w-full flex justify-center h-20 px-4 py-2">
-                  <div className="hidden md:flex w-full">
-                    {/* Desktop navigation */}
-                    <Nav />
-                  </div>
-
-                  {/* Mobile navigation */}
-                  <div className="md:hidden w-full">
-                    <MobileNav />
-                  </div>
-                </nav>
-
-                <main className="flex-1 w-full mx-auto px-0 sm:px-6 lg:px-8">
-                  {children}
-                </main>
-
-                <Footer />
+            {/* Navigation */}
+            {/* <nav className="fixed top-0 left-0 right-0 w-full flex justify-center h-20 px-4 py-2 z-50">
+              <div className="hidden md:flex w-full">
+                <Nav />
               </div>
-            </main>
+
+              <div className="md:hidden w-full">
+                <MobileNav />
+              </div>
+            </nav> */}
+            {/* <ProgressBarProvider> */}
+            <main className="w-full">{children}</main>
+            <Footer />
             <Analytics />
             <Toaster />
             {/* </ProgressBarProvider> */}

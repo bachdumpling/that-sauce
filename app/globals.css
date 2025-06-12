@@ -112,11 +112,3 @@
     font-family: var(--font-sans);
   }
 }
-
-@font-face {
-  font-family: "ThatSauceRegular";
-  src: url("/fonts/ThatSauceRegular.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}

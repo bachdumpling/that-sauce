@@ -43,7 +43,7 @@ export default async function Layout({
   const authContent = await getAuthPageContent();
 
   return (
-    <div className="absolute inset-0 bg-background rounded-lg shadow-sm">
+    <div className="absolute inset-0 bg-background rounded-lg shadow-sm z-30">
       {/* Logo */}
       <Image
         src="/thatsaucelogoheader-black.svg"
@@ -55,7 +55,7 @@ export default async function Layout({
       />
 
       {/* Return button */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-30">
         <Link
           href="/"
           className="inline-flex items-center gap-2 px-4 py-2 bg-background/90 backdrop-blur-sm border-2 border-border text-foreground font-medium hover:bg-primary hover:text-primary-foreground transition-all duration-200 rounded-lg"

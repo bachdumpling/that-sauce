@@ -14,7 +14,7 @@ export default function StudioLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="absolute inset-0 h-screen w-screen overflow-hidden">
+    <div className="absolute inset-0 h-screen w-screen overflow-hidden z-50">
       {/* Full screen studio - no navigation or footer */}
       {children}
     </div>
