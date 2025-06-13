@@ -2,44 +2,72 @@
 import React from "react";
 import Typewriter from "typewriter-effect";
 import { Search } from "lucide-react";
-import ShapeBlur from "./ShapeBlur/ShapeBlur";
+import { Button } from "../ui/button";
+import DotGrid from "./DotGrid/DotGrid";
 
 const TypewriterSearch = () => {
   return (
-    <div className="relative w-full max-w-xl mx-auto mt-8 flex justify-center items-center">
-      <div className="absolute inset-0 h-full w-full z-10">
-        <ShapeBlur
-          variation={0}
-          pixelRatioProp={window.devicePixelRatio || 1}
-          shapeWidth={20}
-          shapeHeight={1.4}
-          roundness={1.5}
-          borderSize={0.1}
-          circleSize={2}
-          circleEdge={2}
-        />
+    <div className="w-full flex flex-col gap-10 px-20">
+      {/* Title */}
+      <div className="flex justify-between px-4 gap-10">
+        <h1 className="text-8xl font-bold max-w-4xl">
+          What if you could just… describe what you need?
+        </h1>
+        <p className="text-lg text-gray-400 max-w-2xl">
+          Our AI doesn't care about follower counts. It reads creative
+          DNA—style, technique, vision.
+        </p>
       </div>
-      <div className="relative w-10/12 rounded-full py-3 pl-12 pr-4 text-white text-lg z-10">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-          <Search className="text-gray-400" />
-        </div>
-        <Typewriter
-          options={{
-            strings: [
-              "Photographer",
-              "Videographer",
-              "UI/UX Designer",
-              "Animator",
-              "Creative Director",
-            ],
-            autoStart: true,
-            loop: true,
-            delay: 75,
-            deleteSpeed: 50,
-            wrapperClassName: "inline",
-            cursorClassName: "inline",
-          }}
+
+      {/* Search Bar */}
+      <div className="relative w-full h-[500px]">
+        {/* DotGrid Background - Full Width */}
+        <DotGrid
+          className="absolute inset-0 w-full h-full"
+          dotSize={8}
+          gap={24}
+          baseColor="#e5e7eb"
+          activeColor="#5227FF"
+          proximity={120}
         />
+
+        {/* Search Bar - Absolutely Positioned on Top */}
+        <div className="absolute inset-0 flex justify-center items-center">
+          <div className="relative w-full max-w-xl mx-auto flex items-center bg-white rounded-full border-2 border-black shadow-lg">
+            {/* Search Icon */}
+            <div className="absolute left-4 flex items-center pointer-events-none">
+              <Search className="text-gray-400 w-5 h-5" />
+            </div>
+
+            {/* Typewriter Input Area */}
+            <div className="flex-1 py-4 pl-12 pr-4 text-black text-lg">
+              <Typewriter
+                options={{
+                  strings: [
+                    "Photographer",
+                    "Videographer",
+                    "UI/UX Designer",
+                    "Animator",
+                    "Creative Director",
+                  ],
+                  autoStart: true,
+                  loop: true,
+                  delay: 75,
+                  deleteSpeed: 100,
+                  wrapperClassName: "inline",
+                  cursorClassName: "inline",
+                }}
+              />
+            </div>
+
+            {/* Search Button */}
+            <div className="pr-4">
+              <Button variant="secondary" className="rounded-full">
+                SEARCH
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

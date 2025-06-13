@@ -6,6 +6,8 @@ import Spline from "@splinetool/react-spline";
 import TypewriterSearch from "./TypewriterSearch";
 import RotatingCube from "./RotatingCube";
 import { MotionValue } from "framer-motion";
+import { BackgroundLines } from "@/components/ui/background-lines";
+import WaitlistForm from "./WaitlistForm";
 
 interface HeroProps {
   landingPageData?: LandingPageData;
@@ -24,7 +26,7 @@ export default function Hero({
     "The best creatives aren't always the loudest. They're just the best";
 
   return (
-    <div className="w-full h-screen relative">
+    <BackgroundLines className="w-full h-screen relative">
       <Suspense fallback={null}>
         <RotatingCube heroParallaxY={heroParallaxY} />
       </Suspense>
@@ -51,6 +53,11 @@ export default function Hero({
 
         {/* <p className={`text-xl mb-8 max-w-2xl text-center`}>{heroSubtitle}</p> */}
       </div>
-    </div>
+
+      {/* Waitlist Form */}
+      <div className="absolute bottom-20 left-0 right-0 z-10 flex justify-center px-4">
+        <WaitlistForm className="w-full max-w-md" />
+      </div>
+    </BackgroundLines>
   );
 }

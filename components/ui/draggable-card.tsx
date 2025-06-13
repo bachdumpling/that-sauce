@@ -1,12 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import React, { useRef } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform,
-} from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 export const DraggableCardBody = ({
   className,
@@ -29,21 +24,21 @@ export const DraggableCardBody = ({
 
   const rotateX = useSpring(
     useTransform(mouseY, [-300, 300], [25, -25]),
-    springConfig,
+    springConfig
   );
   const rotateY = useSpring(
     useTransform(mouseX, [-300, 300], [-25, 25]),
-    springConfig,
+    springConfig
   );
 
   const opacity = useSpring(
     useTransform(mouseX, [-300, 0, 300], [0.8, 1, 0.8]),
-    springConfig,
+    springConfig
   );
 
   const glareOpacity = useSpring(
     useTransform(mouseX, [-300, 0, 300], [0.2, 0, 0.2]),
-    springConfig,
+    springConfig
   );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -83,7 +78,7 @@ export const DraggableCardBody = ({
       onMouseLeave={handleMouseLeave}
       className={cn(
         "relative min-h-96 w-80 overflow-hidden rounded-md bg-neutral-100 p-6 shadow-2xl transform-3d dark:bg-neutral-900",
-        className,
+        className
       )}
     >
       {children}

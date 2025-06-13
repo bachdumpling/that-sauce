@@ -13,54 +13,49 @@ import {
   DraggableCardBody,
 } from "@/components/ui/draggable-card";
 import Image from "next/image";
+import Demo from "./demo";
+import TypewriterSearch from "./TypewriterSearch";
 
 function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   const items = [
     {
-      title: "Dribbble",
+      title: "This",
       image: "/problem-images/image-1.png",
-      className: "absolute top-10 left-[20%] rotate-[-5deg]",
-      top: 10,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "Behance",
+      title: "is",
       image: "/problem-images/image-2.png",
-      className: "absolute top-40 left-[25%] rotate-[-7deg]",
-      top: 40,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "Instagram",
+      title: "how",
       image: "/problem-images/image-3.png",
-      className: "absolute top-5 left-[40%] rotate-[8deg]",
-      top: 5,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "LinkedIn",
+      title: "we",
       image: "/problem-images/image-4.png",
-      className: "absolute top-32 left-[55%] rotate-[10deg]",
-      top: 32,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "Figma",
+      title: "stop",
       image: "/problem-images/image-5.png",
-      className: "absolute top-20 right-[35%] rotate-[2deg]",
-      top: 20,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "Upwork",
+      title: "the",
       image: "/problem-images/image-6.png",
-      className: "absolute top-24 left-[45%] rotate-[-7deg]",
-      top: 24,
+      className: "col-start-1 row-start-1",
     },
     {
-      title: "Fiverr",
+      title: "scrolling",
       image: "/problem-images/image-7.png",
-      className: "absolute top-8 left-[30%] rotate-[4deg]",
-      top: 8,
+      className: "col-start-1 row-start-1",
     },
   ];
 
-  const sortedItems = [...items].sort((a, b) => a.top - b.top);
+  const sortedItems = [...items];
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -69,7 +64,11 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   });
 
   const { scrollYProgress: heroScrollYProgress } = useScroll();
-  const heroParallaxY = useTransform(heroScrollYProgress, [0, 1], ["0%", "50%"]);
+  const heroParallaxY = useTransform(
+    heroScrollYProgress,
+    [0, 1],
+    ["0%", "50%"]
+  );
 
   const numCards = items.length;
   const animationStart = 0.1;
@@ -83,14 +82,14 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   );
 
   return (
-    <div className="relative">
-      <div className="flex flex-col items-center justify-center mt-10">
+    <div className="flex flex-col gap-20 relative">
+      <div className="flex flex-col items-center justify-center">
         <Image
           src="/logo-dark.png"
           alt="Background"
           width={400}
           height={400}
-          className="object-cover"
+          className="object-cover pt-10 "
         />
         {/* <div style={{ width: "100%", height: "100%", position: "absolute" }}>
         <Particles
@@ -115,6 +114,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
         </div>
       </div>
 
+      {/* Algorithm Section */}
       <div className="flex h-screen w-full flex-col items-center justify-center gap-20 text-5xl font-medium">
         {/* <ScrollReveal
           baseOpacity={0}
@@ -147,8 +147,10 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
           />
         </AnimatedContent>
       </div>
+
+      {/* Problem Section */}
       <div ref={scrollRef} className="relative h-[500vh]">
-        <DraggableCardContainer className="sticky top-0 flex h-screen w-full items-center justify-center overflow-clip">
+        <DraggableCardContainer className="sticky top-0 grid h-screen w-full place-items-center overflow-clip">
           <motion.p
             style={{ opacity: textOpacity }}
             className="absolute top-1/2 mx-auto max-w-sm -translate-y-3/4 text-center text-2xl font-black text-neutral-400 md:text-4xl dark:text-neutral-800"
@@ -163,7 +165,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
             const x = useTransform(
               scrollYProgress,
               [cardStart, cardEnd],
-              [0, (Math.floor(i / 2) * 350 + 500) * side]
+              [0, (Math.floor(i / 2) * 600 + 800) * side]
             );
             const rotate = useTransform(
               scrollYProgress,
@@ -180,7 +182,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
             return (
               <DraggableCardBody
                 key={item.title}
-                className={item.className}
+                className={`${item.className} h-[50vh] w-[50vh] aspect-[4/3] rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-lg`}
                 style={{
                   x,
                   y,
@@ -191,7 +193,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="pointer-events-none relative z-10 h-80 w-80 object-cover"
+                  className="pointer-events-none relative z-10 object-cover"
                 />
                 <h3 className="mt-4 text-center text-2xl font-bold text-neutral-700 dark:text-neutral-300">
                   {item.title}
@@ -200,6 +202,15 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
             );
           })}
         </DraggableCardContainer>
+      </div>
+
+      {/* Demo Section */}
+      <div className="flex flex-col items-center justify-center">
+        <TypewriterSearch />
+      </div>
+
+      <div className="flex flex-col items-center justify-center">
+        <Demo />
       </div>
     </div>
   );
