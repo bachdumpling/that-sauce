@@ -82,6 +82,7 @@ const DotGrid: React.FC<DotGridProps> = ({
   const activeRgb = useMemo(() => hexToRgb(activeColor), [activeColor]);
 
   const circlePath = useMemo(() => {
+    if (typeof window === "undefined") return null; // Skip during SSR
     const p = new Path2D();
     p.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
     return p;
@@ -159,7 +160,14 @@ const DotGrid: React.FC<DotGridProps> = ({
         ctx.save();
         ctx.translate(ox, oy);
         ctx.fillStyle = style;
-        ctx.fill(circlePath);
+        if (circlePath) {
+          ctx.fill(circlePath);
+        } else {
+          // Fallback for SSR or when Path2D is not available
+          ctx.beginPath();
+          ctx.arc(0, 0, dotSize / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
         ctx.restore();
       }
 

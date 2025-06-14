@@ -8,6 +8,7 @@ import {
   Trackpad,
   SpeakerGrid,
 } from "./macbook-scroll";
+import ImageCarousel from "./ImageCarousel";
 
 interface Slide {
   src: string;
@@ -29,11 +30,14 @@ export const MacbookScrollV2 = ({
 }: MacbookScrollV2Props) => {
   // ===== Phase A / B – Macbook opening & exit =====
   const openingRef = useRef<HTMLDivElement>(null);
+  // Track scroll progress of the opening section (0 = section top hits viewport
+  // top, 1 = section bottom hits viewport top)
   const { scrollYProgress } = useScroll({
     target: openingRef,
     offset: ["start start", "end start"],
   });
 
+  // Detect small screens once on mount so we can use gentler scaling values.
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -41,26 +45,31 @@ export const MacbookScrollV2 = ({
     }
   }, []);
 
-  // Original transforms
+  // Horizontal scale for the lid – gives a gentle zoom-out while opening.
   const scaleX = useTransform(
     scrollYProgress,
-    [0, 0.3],
+    [0, 0.3], // 0-30% of Phase A
     [1.2, isMobile ? 1 : 1.5]
   );
+  // Vertical scale (thickness) so the laptop retains correct proportions.
   const scaleY = useTransform(
     scrollYProgress,
     [0, 0.3],
     [0.6, isMobile ? 1 : 1.5]
   );
+  // Translate the entire laptop downwards once the lid is flat so it exits the frame.
   const translateY = useTransform(scrollYProgress, [0, 1], [0, 1600]);
+  // 3D rotate the lid from -28° (closed) → 0° (flat).
   const rotateX = useTransform(
     scrollYProgress,
     [0.1, 0.12, 0.3],
     [-28, -28, 0]
   );
+  // Slide the opening title downward as the user begins to scroll.
   const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
+  // Fade the title out within the first 20% of the scroll.
   const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  // New horizontal shift for the lid – 0.30 → 0.45 progress
+  // After the laptop is flat we push the LID graphic off screen to the left.
   const lidShiftX = useTransform(
     scrollYProgress,
     [0.4, 0.65],
@@ -122,97 +131,9 @@ export const MacbookScrollV2 = ({
       </div>
 
       {/* ===== Phase C – Horizontal gallery ===== */}
-      <HorizontalGallery slides={gallery} />
+      <div className="my-20">
+        <ImageCarousel imageUrls={gallery.map((slide) => slide.src)} />
+      </div>
     </div>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/*                              HorizontalGallery                             */
-/* -------------------------------------------------------------------------- */
-
-const HorizontalGallery = ({ slides }: { slides: Slide[] }) => {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  // Total scroll distance = (slides.length) * 100vh
-  const { scrollYProgress } = useScroll({
-    target: wrapperRef,
-    offset: ["start start", "end start"],
-  });
-
-  // Optional fade out at the very end (last 10% of the section)
-  const opacity = useTransform(scrollYProgress, [0.9, 1], [1, 0]);
-
-  return (
-    <div
-      ref={wrapperRef}
-      className="relative w-full"
-      style={{ height: `${slides.length * 100}vh` }}
-    >
-      <motion.div
-        style={{ opacity }}
-        className="sticky top-0 h-screen w-screen"
-      >
-        {slides.map((slide, idx) => (
-          <GallerySlide
-            key={idx}
-            slide={slide}
-            index={idx}
-            total={slides.length}
-            progress={scrollYProgress}
-          />
-        ))}
-      </motion.div>
-    </div>
-  );
-};
-
-interface GallerySlideProps {
-  slide: Slide;
-  index: number;
-  total: number;
-  progress: MotionValue<number>;
-}
-
-const GallerySlide = ({ slide, index, total, progress }: GallerySlideProps) => {
-  const slice = 1 / total;
-  // Ultra-compressed timeline within each slice
-  const entryStart = index * slice; // immediately on slice start
-  const center = index * slice + slice * 0.15; // centre early
-  const exitEnd = index * slice + slice * 0.3; // exit by 30% of slice
-
-  // X position: 100vw -> 0 -> -100vw during its active window
-  const translateX = useTransform(
-    progress,
-    [entryStart, center, exitEnd],
-    ["100vw", "0vw", "-100vw"]
-  );
-  // Parallax Y and scale relative to translateX (optional)
-  const translateY = useTransform(progress, [entryStart, exitEnd], [20, -20]);
-  const scale = useTransform(progress, [entryStart, exitEnd], [1, 1.05]);
-  // Caption opacity peaks when centered
-  const captionOpacity = useTransform(
-    progress,
-    [entryStart, center, exitEnd],
-    [0, 1, 0]
-  );
-
-  return (
-    <motion.div
-      style={{ translateX, zIndex: total - index }}
-      className="absolute inset-0 flex flex-col items-center justify-center"
-    >
-      <motion.img
-        src={slide.src}
-        alt={slide.caption}
-        style={{ translateY, scale }}
-        className="max-h-[70vh] w-auto object-contain"
-      />
-      <motion.p
-        style={{ opacity: captionOpacity }}
-        className="mt-8 text-center text-xl font-semibold text-neutral-800 dark:text-white whitespace-pre-wrap"
-      >
-        {slide.caption}
-      </motion.p>
-    </motion.div>
   );
 };

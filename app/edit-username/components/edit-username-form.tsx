@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Creator } from "@/types";
 import { useState, useCallback } from "react";
-import { updateCreatorProfile } from "@/lib/api/client/creators";
+import { updateCreatorProfileClient } from "@/lib/api/client/creators";
 import {
   UsernameInput,
   UsernameFormData,
@@ -44,39 +44,24 @@ export function EditUsernameForm({ creator }: EditUsernameFormProps) {
 
   const handleSave = async () => {
     if (!usernameData.isValid || !usernameData.isAvailable) {
-      toast({
-        title: "Invalid username",
-        description: "Please provide a valid and available username.",
-        variant: "destructive",
-      });
+      toast.error("Please provide a valid and available username.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await updateCreatorProfile(creator.username, {
+      const response = await updateCreatorProfileClient(creator.username, {
         username: usernameData.username,
       });
 
       if (response.success) {
         setSuccess("Username updated successfully");
-        toast({
-          title: "Success",
-          description: "Username updated successfully",
-        });
+        toast.success("Username updated successfully");
       } else {
-        toast({
-          title: "Error",
-          description: response.error || "Failed to update username",
-          variant: "destructive",
-        });
+        toast.error(response.error || "Failed to update username");
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
+      toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
