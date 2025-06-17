@@ -2,13 +2,9 @@
 import { Suspense } from "react";
 import SplitText from "./SplitText/SplitText";
 import { LandingPageData } from "@/types/sanity";
-import Spline from "@splinetool/react-spline";
-import TypewriterSearch from "./TypewriterSearch";
 import RotatingCube from "./RotatingCube";
 import { MotionValue } from "framer-motion";
 import { BackgroundLines } from "@/components/ui/background-lines";
-import WaitlistForm from "./WaitlistForm";
-import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 
 interface HeroProps {
@@ -32,10 +28,6 @@ export default function Hero({
       <Suspense fallback={null}>
         <RotatingCube heroParallaxY={heroParallaxY} />
       </Suspense>
-      {/* Spline Background */}
-      {/* <div className="absolute inset-0 z-50">
-        <Spline scene="https://prod.spline.design/76e9Czik8zPp0pMZ/scene.splinecode" />
-      </div> */}
 
       {/* Text Content Overlay */}
       <div className="absolute top-52 left-0 right-0 z-0 flex flex-col items-center justify-center px-4">
@@ -56,7 +48,7 @@ export default function Hero({
         {/* <p className={`text-xl mb-8 max-w-2xl text-center`}>{heroSubtitle}</p> */}
       </div>
 
-      {/* Waitlist Form */}
+      {/* Waitlist Button */}
       <div className="absolute bottom-40 left-0 right-0 z-10 flex justify-center">
         <Button className="">Join Waitlist</Button>
       </div>
