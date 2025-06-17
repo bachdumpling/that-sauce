@@ -141,6 +141,52 @@ export const landingPage = defineType({
       description: "Hero section content and settings",
     }),
     defineField({
+      name: "features",
+      title: "Features Section",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          fields: [
+            defineField({
+              name: "title",
+              title: "Feature Title",
+              type: "string",
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "subtitle",
+              title: "Feature Subtitle",
+              type: "text",
+              validation: (Rule) => Rule.required(),
+            }),
+            defineField({
+              name: "video",
+              title: "Feature Video",
+              type: "file",
+              options: {
+                accept: "video/*",
+              },
+              description: "Video for this feature",
+            }),
+          ],
+          preview: {
+            select: {
+              title: "title",
+              subtitle: "subtitle",
+            },
+            prepare({ title, subtitle }) {
+              return {
+                title: title || "Feature",
+                subtitle: subtitle || "No subtitle",
+              };
+            },
+          },
+        },
+      ],
+      description: "List of features to showcase",
+    }),
+    defineField({
       name: "seo",
       title: "SEO Settings",
       type: "object",

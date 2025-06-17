@@ -10,7 +10,7 @@ const TypewriterSearch = () => {
     <div className="w-full flex flex-col gap-10">
       {/* Title */}
       <div className="flex justify-between px-4 gap-10">
-        <h1 className="text-8xl font-bold max-w-4xl">
+        <h1 className="text-8xl font-bold max-w-5xl font-sauce">
           What if you could just… describe what you need?
         </h1>
         <p className="text-lg text-gray-400 max-w-2xl">

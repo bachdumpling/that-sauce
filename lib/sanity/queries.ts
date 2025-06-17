@@ -41,6 +41,18 @@ export const LANDING_PAGE_QUERY = groq`
         customColor
       }
     },
+    features[] {
+      title,
+      subtitle,
+      video {
+        asset-> {
+          _id,
+          url,
+          mimeType,
+          size
+        }
+      }
+    },
     seo {
       metaTitle,
       metaDescription,

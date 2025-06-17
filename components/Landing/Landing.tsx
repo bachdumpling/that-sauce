@@ -82,7 +82,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   );
 
   return (
-    <div className="flex flex-col gap-20 relative">
+    <div className="flex flex-col gap-20 relative pb-20">
       <div
         className={cn(
           "absolute inset-0 -z-10",
@@ -91,7 +91,7 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
           "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]"
         )}
       />
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_30%,black)] dark:bg-black"></div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_60%,black)] dark:bg-black"></div>
       <div className="flex flex-col items-center justify-center">
         <Image
           src="/logo-dark.png"
@@ -208,8 +208,8 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
 
       <Demo />
 
-      <div className="h-screen w-full flex flex-col items-center justify-center">
-        <Feature />
+      <div className="h-full w-full flex flex-col items-start justify-start">
+        <Feature features={landingPageData?.features} />
       </div>
     </div>
   );

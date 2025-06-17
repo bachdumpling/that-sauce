@@ -146,6 +146,18 @@ export interface LandingPageData {
       customColor?: string;
     };
   };
+  features?: {
+    title: string;
+    subtitle: string;
+    video?: {
+      asset: {
+        _id: string;
+        url: string;
+        mimeType: string;
+        size: number;
+      };
+    };
+  }[];
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
