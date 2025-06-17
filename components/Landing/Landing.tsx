@@ -4,8 +4,6 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Hero from "./hero";
 import { LandingPageData } from "@/types/sanity";
-import Particles from "./Particles/Particles";
-import ScrollReveal from "./ScrollReveal/ScrollReveal";
 import DecryptedText from "./DecryptedText/DecryptedText";
 import AnimatedContent from "./AnimatedContent/AnimatedContent";
 import {
@@ -15,6 +13,8 @@ import {
 import Image from "next/image";
 import Demo from "./demo";
 import TypewriterSearch from "./TypewriterSearch";
+import { cn } from "@/lib/utils";
+import Feature from "./feature";
 
 function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   const items = [
@@ -83,26 +83,23 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
 
   return (
     <div className="flex flex-col gap-20 relative">
+      <div
+        className={cn(
+          "absolute inset-0 -z-10",
+          "[background-size:30px_30px]",
+          "[background-image:radial-gradient(#d4d4d4_1px,transparent_1px)]",
+          "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]"
+        )}
+      />
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_30%,black)] dark:bg-black"></div>
       <div className="flex flex-col items-center justify-center">
         <Image
           src="/logo-dark.png"
           alt="Background"
           width={400}
           height={400}
-          className="object-cover pt-10 "
+          className="object-cover pt-10 z-50"
         />
-        {/* <div style={{ width: "100%", height: "100%", position: "absolute" }}>
-        <Particles
-          particleColors={["#e21313", "#ff9d00", "#1fe55c"]}
-          particleCount={200}
-          particleSpread={10}
-          speed={0.1}
-          particleBaseSize={100}
-          moveParticlesOnHover={true}
-          alphaParticles={false}
-          disableRotation={false}
-        />
-      </div> */}
 
         <div className="flex flex-col items-center justify-center mt-10"></div>
         <div className="h-screen w-full">
@@ -209,8 +206,10 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
         <TypewriterSearch />
       </div>
 
-      <div className="flex flex-col items-center justify-center">
-        <Demo />
+      <Demo />
+
+      <div className="h-screen w-full flex flex-col items-center justify-center">
+        <Feature />
       </div>
     </div>
   );

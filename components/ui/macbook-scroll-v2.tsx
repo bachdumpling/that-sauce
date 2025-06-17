@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, MotionValue } from "motion/react";
 // Re-use the sub-components exported from the original macbook-scroll
@@ -8,7 +9,7 @@ import {
   Trackpad,
   SpeakerGrid,
 } from "./macbook-scroll";
-import ImageCarousel from "./ImageCarousel";
+import ImageCarousel from "../Landing/Slide/Slide";
 
 interface Slide {
   src: string;
@@ -18,14 +19,12 @@ interface Slide {
 interface MacbookScrollV2Props {
   openingTitle?: string | React.ReactNode;
   lidSrc?: string;
-  gallery: Slide[];
   showGradient?: boolean;
 }
 
 export const MacbookScrollV2 = ({
   openingTitle,
   lidSrc,
-  gallery,
   showGradient = false,
 }: MacbookScrollV2Props) => {
   // ===== Phase A / B – Macbook opening & exit =====
@@ -69,11 +68,23 @@ export const MacbookScrollV2 = ({
   const textTransform = useTransform(scrollYProgress, [0, 0.3], [0, 100]);
   // Fade the title out within the first 20% of the scroll.
   const textOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  // After the laptop is flat we push the LID graphic off screen to the left.
+  // After the laptop is flat we push the LID graphic off screen to the center and zoom in to be full screen.
   const lidShiftX = useTransform(
     scrollYProgress,
-    [0.4, 0.65],
-    ["0vw", "-100vw"]
+    [0, 0.2, 0.4],
+    ["0vw", "0vw", "0vw"]
+  );
+  const lidScale = useTransform(scrollYProgress, [0, 0.4, 0.6], [1, 1.8, 2.2]);
+  const lidShiftY = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.4],
+    ["0vw", "-20vw", "-40vw"]
+  );
+  // Fade the lid out within the first 40% of the scroll.
+  const lidOpacity = useTransform(
+    scrollYProgress,
+    [0, 0.2, 0.4],
+    [0.4, 0.6, 1]
   );
 
   return (
@@ -95,13 +106,15 @@ export const MacbookScrollV2 = ({
         </motion.h2>
 
         {/* Lid wrapped with horizontal translate */}
-        <motion.div style={{ translateX: lidShiftX }}>
+        <motion.div style={{ translateX: lidShiftX, translateY: lidShiftY }}>
           <BaseLid
             src={lidSrc}
             scaleX={scaleX}
             scaleY={scaleY}
             rotate={rotateX}
             translate={translateY as MotionValue<number>}
+            lidScale={lidScale}
+            lidOpacity={lidOpacity}
           />
         </motion.div>
 
@@ -128,11 +141,6 @@ export const MacbookScrollV2 = ({
             <div className="absolute inset-x-0 bottom-0 z-50 h-40 w-full bg-gradient-to-t from-white via-white to-transparent dark:from-black dark:via-black"></div>
           )}
         </div>
-      </div>
-
-      {/* ===== Phase C – Horizontal gallery ===== */}
-      <div className="my-20">
-        <ImageCarousel imageUrls={gallery.map((slide) => slide.src)} />
       </div>
     </div>
   );

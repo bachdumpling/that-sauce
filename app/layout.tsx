@@ -78,6 +78,18 @@ const helveticaNeue = localFont({
   display: "swap",
 });
 
+const thatSauce = localFont({
+  src: [
+    {
+      path: "../public/fonts/ThatSauceRegular.otf",
+      weight: "400",
+      style: "normal",
+    },
+  ],
+  variable: "--font-that-sauce",
+  display: "swap",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -86,7 +98,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${helveticaNeue.variable}`}
+      className={`${helveticaNeue.variable} ${thatSauce.variable}`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground font-sans">

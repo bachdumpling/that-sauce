@@ -7,7 +7,7 @@ import DotGrid from "./DotGrid/DotGrid";
 
 const TypewriterSearch = () => {
   return (
-    <div className="w-full flex flex-col gap-10 px-20">
+    <div className="w-full flex flex-col gap-10">
       {/* Title */}
       <div className="flex justify-between px-4 gap-10">
         <h1 className="text-8xl font-bold max-w-4xl">
@@ -20,15 +20,15 @@ const TypewriterSearch = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="relative w-full h-[500px]">
+      <div className="relative w-full h-[620px] bg-background bg-opacity-10">
         {/* DotGrid Background - Full Width */}
         <DotGrid
           className="absolute inset-0 w-full h-full"
-          dotSize={8}
-          gap={24}
+          dotSize={40}
+          gap={50}
           baseColor="#e5e7eb"
           activeColor="#5227FF"
-          proximity={120}
+          proximity={200}
         />
 
         {/* Search Bar - Absolutely Positioned on Top */}

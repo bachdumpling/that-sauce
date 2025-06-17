@@ -1,132 +1,78 @@
-import React, { useEffect, useRef, useMemo, ReactNode, RefObject } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+"use client";
 
-gsap.registerPlugin(ScrollTrigger);
+import { useScroll, useTransform, motion, MotionValue } from "framer-motion";
+import React, { useRef } from "react";
 
+// The props for the main ScrollReveal component.
 interface ScrollRevealProps {
-  children: ReactNode;
-  scrollContainerRef?: RefObject<HTMLElement>;
-  enableBlur?: boolean;
-  baseOpacity?: number;
-  baseRotation?: number;
-  blurStrength?: number;
-  containerClassName?: string;
-  textClassName?: string;
-  rotationEnd?: string;
-  wordAnimationEnd?: string;
+  // The text content to be animated.
+  text: string;
+  // Optional CSS classes to apply to the container.
+  className?: string;
 }
 
-const ScrollReveal: React.FC<ScrollRevealProps> = ({
-  children,
-  scrollContainerRef,
-  enableBlur = true,
-  baseOpacity = 0.1,
-  baseRotation = 3,
-  blurStrength = 4,
-  containerClassName = "",
-  textClassName = "",
-  rotationEnd = "bottom bottom",
-  wordAnimationEnd = "bottom bottom",
-}) => {
-  const containerRef = useRef<HTMLHeadingElement>(null);
+// This is the main component that orchestrates the scroll reveal animation.
+const ScrollReveal: React.FC<ScrollRevealProps> = ({ text, className }) => {
+  // A ref to the paragraph element that will be the target for scroll tracking.
+  const container = useRef<HTMLParagraphElement>(null);
 
-  const splitText = useMemo(() => {
-    const text = typeof children === "string" ? children : "";
-    return text.split(/(\s+)/).map((word, index) => {
-      if (word.match(/^\s+$/)) return word;
-      return (
-        <span className="inline-block" key={index}>
-          {word}
-        </span>
-      );
-    });
-  }, [children]);
+  // useScroll hook from Framer Motion to track the scroll progress of the container.
+  // 'target' is the element to track.
+  // 'offset' defines the start and end points of the animation based on the container's visibility in the viewport.
+  // ["start end"] means the animation starts when the top of the container hits the bottom of the viewport.
+  // ["end start"] means the animation ends when the bottom of the container hits the top of the viewport.
+  const { scrollYProgress } = useScroll({
+    target: container,
+    offset: ["start end", "end start"],
+  });
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const scroller =
-      scrollContainerRef && scrollContainerRef.current
-        ? scrollContainerRef.current
-        : window;
-
-    gsap.fromTo(
-      el,
-      { transformOrigin: "0% 50%", rotate: baseRotation },
-      {
-        ease: "none",
-        rotate: 0,
-        scrollTrigger: {
-          trigger: el,
-          scroller,
-          start: "top bottom",
-          end: rotationEnd,
-          scrub: true,
-        },
-      }
-    );
-
-    const wordElements = el.querySelectorAll<HTMLElement>(".word");
-
-    gsap.fromTo(
-      wordElements,
-      { opacity: baseOpacity, willChange: "opacity" },
-      {
-        ease: "none",
-        opacity: 1,
-        stagger: 0.05,
-        scrollTrigger: {
-          trigger: el,
-          scroller,
-          start: "top bottom-=20%",
-          end: wordAnimationEnd,
-          scrub: true,
-        },
-      }
-    );
-
-    if (enableBlur) {
-      gsap.fromTo(
-        wordElements,
-        { filter: `blur(${blurStrength}px)` },
-        {
-          ease: "none",
-          filter: "blur(0px)",
-          stagger: 0.05,
-          scrollTrigger: {
-            trigger: el,
-            scroller,
-            start: "top bottom-=20%",
-            end: wordAnimationEnd,
-            scrub: true,
-          },
-        }
-      );
-    }
-
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
-  }, [
-    scrollContainerRef,
-    enableBlur,
-    baseRotation,
-    baseOpacity,
-    rotationEnd,
-    wordAnimationEnd,
-    blurStrength,
-  ]);
-
+  // Splits the input text into an array of words. The animation will be applied to each word.
+  const words = text.split(" ");
   return (
-    <h2 ref={containerRef} className={`my-5 ${containerClassName}`}>
-      <p
-        className={`text-[clamp(1.6rem,4vw,3rem)] leading-[1.5] font-semibold ${textClassName}`}
-      >
-        {splitText}
-      </p>
-    </h2>
+    // The container paragraph for the words. It's important to pass the ref here.
+    <p
+      ref={container}
+      className={`flex flex-wrap text-4xl font-bold ${className}`}
+    >
+      {/* Map over the words array to render each word with its own animation. */}
+      {words.map((word, i) => {
+        // Calculate the start and end point of the animation for this specific word.
+        // This distributes the animation progress across all the words.
+        const start = i / words.length;
+        const end = start + 1 / words.length;
+        return (
+          <Word key={i} progress={scrollYProgress} range={[start, end]}>
+            {word}
+          </Word>
+        );
+      })}
+    </p>
+  );
+};
+
+// The props for the Word component.
+interface WordProps {
+  // The word to be rendered.
+  children: string;
+  // The scroll progress from the parent component. It's a MotionValue between 0 and 1.
+  progress: MotionValue<number>;
+  // The start and end range for this word's animation.
+  range: [number, number];
+}
+
+// This component renders an individual word and applies the color-changing animation.
+const Word: React.FC<WordProps> = ({ children, progress, range }) => {
+  // useTransform hook maps the scrollYProgress (0 to 1) to a new value based on the word's specific range.
+  // When scrollYProgress is within the word's range, 'amount' will go from 0 to 1.
+  const amount = useTransform(progress, range, [0, 1]);
+  return (
+    // A span to wrap each word. 'mr-3' adds margin to the right, and 'mt-2' for top margin.
+    <span className="mt-2 mr-3">
+      {/* This is the greyed-out (background) version of the word. It's always visible but with low opacity. */}
+      <span className="absolute opacity-20">{children}</span>
+      {/* This is the white (foreground) version of the word. Its opacity is animated based on the scroll position. */}
+      <motion.span style={{ opacity: amount }}>{children}</motion.span>
+    </span>
   );
 };
 

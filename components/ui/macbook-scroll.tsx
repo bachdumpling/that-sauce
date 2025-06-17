@@ -23,6 +23,7 @@ import { IconWorld } from "@tabler/icons-react";
 import { IconCommand } from "@tabler/icons-react";
 import { IconCaretLeftFilled } from "@tabler/icons-react";
 import { IconCaretDownFilled } from "@tabler/icons-react";
+import ScrollVelocity from "../Landing/ScrollVelocity/ScrollVelocity";
 
 export const MacbookScroll = ({
   src,
@@ -131,12 +132,16 @@ export const Lid = ({
   rotate,
   translate,
   src,
+  lidScale,
+  lidOpacity,
 }: {
   scaleX: MotionValue<number>;
   scaleY: MotionValue<number>;
   rotate: MotionValue<number>;
   translate: MotionValue<number>;
   src?: string;
+  lidScale: MotionValue<number>;
+  lidOpacity: MotionValue<number>;
 }) => {
   return (
     <div className="relative [perspective:800px]">
@@ -165,16 +170,31 @@ export const Lid = ({
           translateY: translate,
           transformStyle: "preserve-3d",
           transformOrigin: "top",
+          scale: lidScale,
+          opacity: lidOpacity,
         }}
-        className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-[#010101] p-2"
+        className="absolute inset-0 h-96 w-[32rem] rounded-2xl bg-white p-2"
       >
-        <div className="absolute inset-0 rounded-2xl bg-[#272729]" />
-        <img
-          src="/lanyard1.jpg"
-          alt="aceternity logo"
-          className="absolute inset-0 h-full w-full rounded-2xl object-cover object-left-top"
-        />
+        {/* <motion.div
+          style={{ scale: lidScale }}
+          className="absolute inset-0 rounded-2xl bg-transparent"
+        ></motion.div> */}
+
+        {/* <motion.div
+          style={{ scale: lidScale }}
+          className="absolute inset-0 h-full w-full rounded-2xl object-cover bg-transparent flex items-center justify-center"
+        >
+          <div className="h-full w-full bg-white"></div>
+        </motion.div> */}
       </motion.div>
+      <div
+        className={cn(
+          "absolute inset-0 z-0",
+          "[background-size:30px_30px]",
+          "[background-image:radial-gradient(#d4d4d4_1px,transparent_1px)]",
+          "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]"
+        )}
+      />
     </div>
   );
 };

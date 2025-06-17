@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    --font-that-sauce: "ThatSauceRegular", cursive, sans-serif;
     --that-sauce-white: #fffffe;
     --that-sauce-black: #000000;
     --that-sauce-red: #e21313;
