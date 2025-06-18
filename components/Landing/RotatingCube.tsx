@@ -127,16 +127,18 @@ function Cube({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
   // Range (in scene units) that the cube will travel vertically for the parallax effect
   const parallaxRange = 20;
 
-  // Rotate cube according to scroll progress (0 → 0 rad, 1 → 2π rad)
-  useFrame(() => {
+  // Rotate cube according to scroll progress and apply a subtle continuous spin (left→right)
+  useFrame(({ clock }) => {
     if (groupRef.current) {
       const progress = scrollProgress.get();
-      const spin = progress * Math.PI * 2; // full revolution
+      const spin = progress * Math.PI * 2; // full revolution based on scroll
 
-      // Rotation: amplify by 4x as configured
+      // Time-driven spin: ~0.2 rad/sec (≈11°/s) around the Y-axis
+      const timeSpin = clock.getElapsedTime() * 0.2;
+
       groupRef.current.rotation.set(
         baseRotation.x + spin * 4,
-        baseRotation.y + spin * 4,
+        baseRotation.y + spin * 2 + timeSpin,
         baseRotation.z
       );
 

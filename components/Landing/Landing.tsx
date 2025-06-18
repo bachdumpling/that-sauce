@@ -4,8 +4,6 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Hero from "./hero";
 import { LandingPageData } from "@/types/sanity";
-import DecryptedText from "./DecryptedText/DecryptedText";
-import AnimatedContent from "./AnimatedContent/AnimatedContent";
 import {
   DraggableCardContainer,
   DraggableCardBody,
@@ -15,6 +13,7 @@ import Demo from "./demo";
 import TypewriterSearch from "./TypewriterSearch";
 import { cn } from "@/lib/utils";
 import Feature from "./feature";
+import Algorithm from "./algorithm";
 
 function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   const items = [
@@ -112,37 +111,8 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
       </div>
 
       {/* Algorithm Section */}
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-20 text-5xl font-medium">
-        {/* <ScrollReveal
-          baseOpacity={0}
-          enableBlur={true}
-          baseRotation={5}
-          blurStrength={10}
-        >
-          Hit it hard
-        </ScrollReveal> */}
-        <AnimatedContent
-          distance={100}
-          direction="vertical"
-          reverse={false}
-          duration={1.2}
-          ease="power3.inOut"
-          initialOpacity={0}
-          animateOpacity
-          scale={1.1}
-          threshold={0.2}
-          delay={0}
-        >
-          <DecryptedText
-            text="Stop getting lost in the noise"
-            speed={80}
-            maxIterations={20}
-            parentClassName="text-5xl font-medium"
-            encryptedClassName="text-5xl font-medium"
-            animateOn="view"
-            revealDirection="center"
-          />
-        </AnimatedContent>
+      <div className="flex h-screen w-full flex-col items-center justify-center">
+        <Algorithm />
       </div>
 
       {/* Problem Section */}
