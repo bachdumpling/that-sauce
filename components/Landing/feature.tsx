@@ -83,19 +83,18 @@ function Feature({ features }: FeatureProps) {
 
   return (
     <div className="flex flex-col items-center w-full overflow-hidden">
-      <div className="z-20 flex flex-col items-center justify-center py-8">
-        <ScrollVelocity
-          texts={[
-            "That Sauce is Built different.",
-            "Built for Creatives, by Creatives.",
-          ]}
-          velocity={50}
-          className="text-6xl font-semibold font-sauce"
-        />
+      <div className="w-full flex flex-col py-8">
+        <h1 className="text-5xl font-medium text-start px-4">For Creators</h1>
+        <div className="flex-1 w-full">
+          <BentoGrid cards={bentoCards} />
+        </div>
       </div>
 
-      <div className="flex-1 w-full">
-        <BentoGrid cards={bentoCards} />
+      <div className="w-full flex flex-col py-8">
+        <h1 className="text-5xl font-medium text-start px-4">For Brands</h1>
+        <div className="flex-1 w-full">
+          <BentoGrid cards={bentoCards} />
+        </div>
       </div>
     </div>
   );

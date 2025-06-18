@@ -14,6 +14,7 @@ import TypewriterSearch from "./TypewriterSearch";
 import { cn } from "@/lib/utils";
 import Feature from "./feature";
 import Algorithm from "./algorithm";
+import Noise from "./Noise/Noise";
 
 function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   const items = [
@@ -180,6 +181,14 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
 
       <div className="h-full w-full flex flex-col items-start justify-start">
         <Feature features={landingPageData?.features} />
+      </div>
+
+      <div className="h-screen w-full flex flex-col items-center justify-center">
+        <h1 className="text-8xl font-sauce text-center px-4">
+          Stop settling.
+          <br />
+          Start creating.
+        </h1>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@
 import React from "react";
 import AnimatedContent from "./AnimatedContent/AnimatedContent";
 import DecryptedText from "./DecryptedText/DecryptedText";
-import CircularGallery from "./CircularGallery/CircularGallery";
 
 function Algorithm() {
   return (
@@ -33,8 +32,9 @@ function Algorithm() {
         </AnimatedContent>
       </div>
 
-      <div className="relative h-[600px] w-screen">
-        <CircularGallery bend={1} textColor="#ffffff" />
+      {/* Circular gallery showcasing sample images */}
+      <div className="relative flex items-center justify-center py-20 w-screen">
+        {/* Sample grayscale images */}
       </div>
     </>
   );
