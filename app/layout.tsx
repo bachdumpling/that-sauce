@@ -110,7 +110,7 @@ export default function RootLayout({
         >
           <ProfileEditProvider>
             {/* Navigation */}
-            {/* <nav className="fixed top-0 left-0 right-0 w-full flex justify-center h-20 px-4 py-2 z-50">
+            {/* <nav className="w-full flex justify-center h-20 px-4 py-2 z-50">
               <div className="hidden md:flex w-full">
                 <Nav />
               </div>
