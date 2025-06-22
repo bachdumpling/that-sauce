@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import FooterBottleLogo from "./FooterBottleLogo";
 import { getActiveFooter } from "@/sanity/lib/queries";
 import { urlFor } from "@/sanity/lib/image";
 import { FooterContent } from "@/types/sanity";
@@ -115,7 +115,7 @@ export async function Footer() {
         .height(content.brand.logoHeight || 80)
         .url();
     }
-    return "/logo.png"; // Fallback to existing logo
+    return "/bottleinsolated.png"; // Fallback to bottle logo
   };
 
   const alignmentClass =
@@ -143,15 +143,12 @@ export async function Footer() {
         <div className={`flex flex-col ${alignmentClass} space-y-8`}>
           {/* Brand Section */}
           <div className="flex flex-col items-center space-y-4">
-            <div className="p-2 rounded-2xl bg-muted/50 transition-all hover:bg-muted">
-              <Image
-                src={getLogoUrl()}
-                alt={content.brand.logo?.alt || content.brand.brandName}
-                width={content.brand.logoWidth || 80}
-                height={content.brand.logoHeight || 80}
-                className={`w-${Math.floor((content.brand.logoWidth || 80) / 4)} h-${Math.floor((content.brand.logoHeight || 80) / 4)} transition-transform hover:scale-105`}
-              />
-            </div>
+            <FooterBottleLogo
+              src={getLogoUrl()}
+              alt={content.brand.logo?.alt || content.brand.brandName}
+              width={content.brand.logoWidth || 120}
+              height={content.brand.logoHeight || 120}
+            />
 
             {/* Brand Name */}
             {content.brand.showBrandName && content.brand.brandName && (

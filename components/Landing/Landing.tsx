@@ -14,7 +14,7 @@ import TypewriterSearch from "./TypewriterSearch";
 import { cn } from "@/lib/utils";
 import Feature from "./feature";
 import Algorithm from "./algorithm";
-import Noise from "./Noise/Noise";
+import Problem from "./problem";
 
 function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
   const items = [
@@ -101,7 +101,6 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
           className="object-cover pt-10 z-50"
         />
 
-        <div className="flex flex-col items-center justify-center mt-10"></div>
         <div className="h-screen w-full">
           {/* Hero Section */}
           <Hero
@@ -117,59 +116,8 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
       </div>
 
       {/* Problem Section */}
-      <div ref={scrollRef} className="relative h-[500vh]">
-        <DraggableCardContainer className="sticky top-0 grid h-screen w-full place-items-center overflow-clip">
-          <motion.p
-            style={{ opacity: textOpacity }}
-            className="absolute top-1/2 mx-auto max-w-sm -translate-y-3/4 text-center text-2xl font-black text-neutral-400 md:text-4xl dark:text-neutral-800"
-          >
-            No more endless scrolling through portfolios
-          </motion.p>
-          {sortedItems.map((item, i) => {
-            const side = i % 2 === 0 ? -1 : 1;
-            const cardStart = animationStart + i * cardAnimationStep;
-            const cardEnd = animationStart + (i + 1) * cardAnimationStep;
-
-            const x = useTransform(
-              scrollYProgress,
-              [cardStart, cardEnd],
-              [0, (Math.floor(i / 2) * 600 + 800) * side]
-            );
-            const rotate = useTransform(
-              scrollYProgress,
-              [cardStart, cardEnd],
-              [0, side * 20]
-            );
-            const y = useTransform(
-              scrollYProgress,
-              [cardStart, cardEnd],
-              [0, -i * 20]
-            );
-            const zIndex = numCards - i;
-
-            return (
-              <DraggableCardBody
-                key={item.title}
-                className={`${item.className} h-[50vh] w-[50vh] aspect-[4/3] rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-lg`}
-                style={{
-                  x,
-                  y,
-                  rotate,
-                  zIndex,
-                }}
-              >
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="pointer-events-none relative z-10 object-cover"
-                />
-                <h3 className="mt-4 text-center text-2xl font-bold text-neutral-700 dark:text-neutral-300">
-                  {item.title}
-                </h3>
-              </DraggableCardBody>
-            );
-          })}
-        </DraggableCardContainer>
+      <div ref={scrollRef} className="h-screen w-full">
+        <Problem />
       </div>
 
       {/* Demo Section */}

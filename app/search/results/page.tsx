@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SearchResultsClient } from "../components/search-results-client";
+import { SearchResultsFullScreenClient } from "../components/search-results-fullscreen-client";
 
 export default async function SearchResultsPage({
   searchParams,
@@ -16,6 +16,7 @@ export default async function SearchResultsPage({
     page?: string;
     has_docs?: string;
     docs_count?: string;
+    creator_index?: string;
   };
 }) {
   // Ensure searchParams is properly awaited
@@ -33,11 +34,14 @@ export default async function SearchResultsPage({
   const maxBudget = params.max_budget
     ? parseInt(params.max_budget, 10)
     : undefined;
-  const limit = params.limit ? parseInt(params.limit, 10) : 5;
+  const limit = params.limit ? parseInt(params.limit, 10) : 50;
   const page = params.page ? parseInt(params.page, 10) : 1;
   const hasDocuments = params.has_docs === "true";
   const documentsCount = params.docs_count
     ? parseInt(params.docs_count, 10)
+    : 0;
+  const creatorIndex = params.creator_index
+    ? parseInt(params.creator_index, 10)
     : 0;
 
   if (!query || !role) {
@@ -51,15 +55,15 @@ export default async function SearchResultsPage({
   }
 
   return (
-    <div className="container">
+    <div className="min-h-screen">
       <Suspense
         fallback={
-          <div className="h-[800px] w-full">
+          <div className="h-screen w-full">
             <Skeleton variant="creator" className="h-full w-full" />
           </div>
         }
       >
-        <SearchResultsClient
+        <SearchResultsFullScreenClient
           query={query}
           role={role}
           contentType={contentType as "all" | "videos" | "images"}
@@ -70,6 +74,7 @@ export default async function SearchResultsPage({
           initialPage={page}
           hasDocuments={hasDocuments}
           documentsCount={documentsCount}
+          initialCreatorIndex={creatorIndex}
         />
       </Suspense>
     </div>
