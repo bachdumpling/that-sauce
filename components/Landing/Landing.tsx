@@ -116,15 +116,9 @@ function Landing({ landingPageData }: { landingPageData?: LandingPageData }) {
       </div>
 
       {/* Problem Section */}
-      <div ref={scrollRef} className="h-screen w-full">
-        <Problem />
-      </div>
+      <Problem />
 
       {/* Demo Section */}
-      <div className="flex flex-col items-center justify-center">
-        <TypewriterSearch />
-      </div>
-
       <Demo />
 
       <div className="h-full w-full flex flex-col items-start justify-start">
